@@ -2,7 +2,8 @@
 
 Et dansk husholdningsbudget til **Home Assistant Apps** og **Docker**. Budgettet fordeler fælles udgifter på tværs af konti, beregner personernes overførsler og bevarer tidligere måneders tal.
 
-- Tilføj og fjern personer, konti og fælles/personlige udgifter.
+- Tilføj og fjern personer, konti, egne kategorier og fælles/personlige udgifter.
+- Betalingsdag pr. post og månedlig status: Kommende, Betalt og Overskredet.
 - Ligeligt rådighedsbeløb før personlige udgifter som standard.
 - Vælg procent af hele puljen, faste beløb eller automatisk rest pr. person.
 - Regninger hver 1., 2., 6. eller 12. måned; vælg månedlig hensættelse eller betalingsmåned pr. post.
@@ -25,6 +26,6 @@ docker compose up -d --build
 
 ## Dokumentation og status
 
-Læs [vejledningen](smart_budget/DOCS.md) for beregningsregler, månedshistorik og installation. Version: **0.1.8**. GitHub Actions kontrollerer beregninger, automatisk lagring, SQLite, API, månedsregnskab og containerbygning. Installation på en rigtig Home Assistant-vært skal stadig afprøves.
+Læs [vejledningen](smart_budget/DOCS.md) for beregningsregler, månedshistorik og installation. Version: **0.2.0**. GitHub Actions kontrollerer beregninger, automatisk lagring, SQLite, API, månedsregnskab og containerbygning. Installation på en rigtig Home Assistant-vært skal stadig afprøves.
 
 Home Assistant-konfigurationen følger [App configuration](https://contributors.home-assistant.io/apps/reference/configuration/) og [Ingress](https://contributors.home-assistant.io/apps/guides/ingress/).

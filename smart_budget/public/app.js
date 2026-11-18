@@ -70,7 +70,7 @@ function renderStatus() {
 function card(label, value, note, highlight = false) { return `<div class="card ${highlight ? 'highlight' : ''}"><div class="card-label">${label}</div><div class="card-value">${kr(value)}</div><div class="card-note">${note}</div></div>`; }
 function editName(kind, row) {
   const label = esc(row.name);
-  return loaded.closed ? label : '<button type="button" class="edit-name" data-edit="' + kind + '" data-id="' + esc(row.id) + '" aria-label="Ret ' + (kind === 'people' ? 'person ' : 'budgetpost ') + label + '">' + label + '</button>';
+  return loaded.closed ? label : '<button type="button" class="edit-name" data-edit="' + kind + '" data-id="' + esc(row.id) + '" aria-label="Ret ' + (kind === 'people' ? 'person ' : kind === 'categories' ? 'kategori ' : 'budgetpost ') + label + '">' + label + '</button>';
 }
 function personLabel(p, n = 0) { return `<span class="person"><span class="avatar ${n % 2 ? 'alt' : ''}">${esc(p.name.slice(0, 1).toUpperCase())}</span>${editName('people', p)}</span>`; }
 function panel(title, subtitle, body, action = '') { return `<div class="panel"><div class="panel-heading"><div><h2>${title}</h2>${subtitle ? `<p>${subtitle}</p>` : ''}</div>${action}</div>${body}</div>`; }
@@ -112,9 +112,34 @@ function peopleView(r) {
 function accountsView(r) {
   return panel('Konti', 'En konto uden personlig ejer er en fælleskonto.', state.accounts.length ? table(['Konto', 'Tilknyttet person', 'Fælles udgifter', 'Personlige udgifter', 'Handling'], r.accounts.map(a => `<tr><td><strong>${esc(a.name)}</strong></td><td class="num">${esc(state.people.find(p => p.id === a.ownerId)?.name ?? 'Fælleskonto')}</td><td class="num">${kr(a.shared)}</td><td class="num">${kr(a.personal)}</td><td class="num">${rowActions('accounts', a.id)}</td></tr>`).join('')) + '<div class="hint">Fælles udgifter på en personlig konto modregnes i ejerens overførsel. Hvis I har flere fælleskonti, viser overblikket behovet på hver konto; personernes bidrag vises samlet.</div>' : empty('Hvor betales regningerne?', 'Opret både fælleskonti og personlige konti.'), addButton('accounts', '+ Tilføj konto'));
 }
+const paymentLabels = { upcoming: 'Kommende', paid: 'Betalt', overdue: 'Overskredet' };
+function paymentBadge(line) {
+  return line.paymentStatus ? '<span class="payment-badge ' + line.paymentStatus + '">' + paymentLabels[line.paymentStatus] + '</span>' : '<span class="muted small">Ingen betaling denne måned</span>';
+}
+function paymentAction(line) {
+  if (loaded.closed || !line.dueDate) return '';
+  return '<button class="table-action" data-payment="' + line.id + '">' + (line.paymentStatus === 'paid' ? 'Markér ubetalt' : 'Markér betalt') + '</button> ';
+}
 function itemsView(r) {
-  const rows = r.lines.filter(i => `${i.name} ${state.accounts.find(a => a.id === i.accountId)?.name}`.toLowerCase().includes(filter.toLowerCase()));
-  return `<div class="section-tools"><label class="sr-only" for="filter">Søg i budgetposter</label><input id="filter" type="search" placeholder="Søg i poster eller konti…" value="${esc(filter)}"></div>` + panel('Budgetposter', 'Beløbet er pr. regning. Månedens budget afhænger af interval og fordelingsvalg.', rows.length ? table(['Post', 'Type / person', 'Betales fra', 'Pr. regning', 'Interval', 'Denne måned', 'Handling'], rows.map(i => `<tr><td><strong>${editName('items', i)}</strong><br><span class="muted small">${i.mode === 'monthly' ? 'Fordelt pr. måned' : 'Kun betalingsmåned'} · fra ${esc(i.startMonth)}</span></td><td class="num">${i.kind === 'shared' ? 'Fælles' : esc(state.people.find(p => p.id === i.personId)?.name)}</td><td class="num">${esc(state.accounts.find(a => a.id === i.accountId)?.name)}</td><td class="num">${kr(i.amount)}</td><td class="num">${labels[i.interval]}</td><td class="num strong">${kr(i.monthlyAmount)}</td><td class="num">${rowActions('items', i.id)}</td></tr>`).join('')) : empty('Ingen budgetposter fundet', state.accounts.length ? 'Tilføj den første udgift for at beregne fordelingen.' : 'Opret en konto, før du tilføjer udgifter.'), addButton('items', '+ Tilføj post'));
+  const rows = r.lines.filter(i => (i.name + ' ' + (state.accounts.find(a => a.id === i.accountId)?.name ?? '') + ' ' + (state.categories.find(c => c.id === i.categoryId)?.name ?? '')).toLowerCase().includes(filter.toLowerCase()));
+  const tools = '<div class="section-tools"><label class="sr-only" for="filter">Søg i budgetposter</label><input id="filter" type="search" placeholder="Søg i poster, konti eller kategorier…" value="' + esc(filter) + '"><button class="secondary" id="manage-categories">Administrer kategorier</button></div>';
+  const body = rows.length ? table(['Post', 'Kategori', 'Type / person', 'Betales fra', 'Pr. regning', 'Denne måned', 'Betalingsdato', 'Status', 'Handling'], rows.map(i => '<tr><td><strong>' + editName('items', i) + '</strong><br><span class="muted small">' + labels[i.interval] + ' · ' + (i.mode === 'monthly' ? 'Fordelt pr. måned' : 'Kun betalingsmåned') + '</span></td><td class="num">' + esc(state.categories.find(c => c.id === i.categoryId)?.name ?? 'Uden kategori') + '</td><td class="num">' + (i.kind === 'shared' ? 'Fælles' : esc(state.people.find(p => p.id === i.personId)?.name)) + '</td><td class="num">' + esc(state.accounts.find(a => a.id === i.accountId)?.name) + '</td><td class="num">' + kr(i.amount) + '</td><td class="num strong">' + kr(i.monthlyAmount) + '</td><td class="num">' + (i.dueDate ? i.dueDate.split('-').reverse().join('.') : '—') + '</td><td class="num">' + paymentBadge(i) + '</td><td class="num">' + paymentAction(i) + rowActions('items', i.id) + '</td></tr>').join('')) : empty('Ingen budgetposter fundet', state.accounts.length ? 'Tilføj den første udgift for at beregne fordelingen.' : 'Opret en konto, før du tilføjer udgifter.');
+  return tools + panel('Budgetposter', 'Beløbet er pr. regning. Månedens budget afhænger af interval og fordelingsvalg.', body, addButton('items', '+ Tilføj post'));
+}
+function categoriesView(r) {
+  const rows = state.categories.map(category => {
+    const entries = r.lines.filter(line => line.categoryId === category.id);
+    return '<tr><td><strong>' + editName('categories', category) + '</strong></td><td class="num">' + entries.length + '</td><td class="num">' + kr(entries.reduce((sum, line) => sum + line.monthlyAmount, 0)) + '</td><td class="num">' + rowActions('categories', category.id) + '</td></tr>';
+  }).join('');
+  return panel('Budgetkategorier', '', rows ? table(['Kategori', 'Antal poster', 'Denne måned', 'Handling'], rows) : empty('Ingen kategorier endnu', 'Opret dine egne kategorier, og vælg dem på budgetposterne.'), addButton('categories', '+ Tilføj kategori'));
+}
+function togglePayment(itemId) {
+  if (busy || loaded.closed) return;
+  const line = currentResult().lines.find(i => i.id === itemId);
+  if (!line?.dueDate) return;
+  const copy = structuredClone(state);
+  copy.payments = copy.payments.includes(itemId) ? copy.payments.filter(id => id !== itemId) : [...copy.payments, itemId];
+  state = validateBudget(copy); dirty = true; errorMessage = ''; render(); void save();
 }
 function ledgerView() {
   if (!ledger) return '<p class="muted">Henter regnskab…</p>';
@@ -128,17 +153,20 @@ function render() {
   $('#summary').hidden = tab !== 'overview';
   $('#summary').innerHTML = `<div class="cards">${card('Samlet indkomst', r.income, '')}${card('Fælles udgifter', r.sharedExpenses, '')}${card('Rådighedspulje', r.pool, '', true)}</div>`;
   $('#messages').innerHTML = (errorMessage ? `<div class="notice error">${esc(errorMessage)}</div>` : '') + r.errors.map(e => `<div class="notice error">${esc(e)}</div>`).join('') + r.warnings.map(e => `<div class="notice">${esc(e)}</div>`).join('') + (dirty ? '<div class="notice info">Ændringerne er endnu ikke gemt. De beholdes her, indtil lagringen lykkes. Andre gemte måneder ændres ikke.</div>' : '');
-  $('#content').innerHTML = ({ overview, people: peopleView, accounts: accountsView, items: itemsView, ledger: ledgerView }[tab])(r);
+  $('#content').innerHTML = ({ overview, people: peopleView, accounts: accountsView, items: itemsView, categories: categoriesView, ledger: ledgerView }[tab])(r);
   document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => openEditor(b.dataset.add)));
   document.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openEditor(b.dataset.edit, b.dataset.id)));
   document.querySelectorAll('[data-remove]').forEach(b => b.addEventListener('click', () => removeRow(b.dataset.remove, b.dataset.id)));
   document.querySelectorAll('[data-month]').forEach(b => b.addEventListener('click', () => { tab = 'overview'; load(b.dataset.month); }));
+  document.querySelectorAll('[data-payment]').forEach(b => b.addEventListener('click', () => togglePayment(b.dataset.payment)));
+  $('#manage-categories')?.addEventListener('click', () => { tab = 'categories'; render(); });
   $('#filter')?.addEventListener('input', event => { const start = event.target.selectionStart; filter = event.target.value; render(); $('#filter').focus(); $('#filter').setSelectionRange(start, start); });
 }
 function removeRow(kind, id) {
   if (loaded.closed || busy) return;
   const copy = structuredClone(state); copy[kind] = copy[kind].filter(r => r.id !== id);
+  if (kind === 'items') copy.payments = copy.payments.filter(itemId => itemId !== id);
   try { state = validateBudget(copy); dirty = true; errorMessage = ''; render(); void save(); }
   catch (error) { toast(error.message); }
 }
@@ -150,7 +178,7 @@ function openEditor(kind, id) {
   if (kind === 'items' && !state.accounts.length) return toast('Opret en konto først.');
   editing = { kind, id: id ?? crypto.randomUUID() };
   const row = state[kind].find(r => r.id === id);
-  $('#dialog-title').textContent = `${row ? 'Ret' : 'Tilføj'} ${ { people: 'person', accounts: 'konto', items: 'budgetpost' }[kind]}`;
+  $('#dialog-title').textContent = `${row ? 'Ret' : 'Tilføj'} ${ { people: 'person', accounts: 'konto', items: 'budgetpost', categories: 'kategori' }[kind]}`;
   let html = field('Navn', input('name', row?.name ?? '', 'required maxlength="120" autocomplete="off"'));
   if (kind === 'people') {
     html += field('Månedlig indkomst efter skat', input('income', inputMoney(row?.income ?? 0), 'inputmode="decimal" required'));
@@ -158,10 +186,13 @@ function openEditor(kind, id) {
     html += field('Procent eller fast beløb', input('value', inputMoney(row?.value ?? 0), 'inputmode="decimal" required'), 'Ved procent: skriv fx 10 for 10 %. Ved fast beløb: skriv kroner. Feltet bruges ikke ved automatisk fordeling.');
   } else if (kind === 'accounts') {
     html += field('Kontoens ejer', select('ownerId', [['', 'Fælleskonto · ingen personlig ejer'], ...state.people.map(p => [p.id, p.name])], row?.ownerId ?? ''), 'Fælles udgifter på en personlig konto tæller med i ejerens bidrag.');
+  } else if (kind === 'categories') {
+    // Categories need only a name.
   } else {
     html += '<div class="form-row">' + field('Type', select('kind', [['shared', 'Fælles udgift'], ['personal', 'Personlig udgift']], row?.kind ?? 'shared')) + field('Betales fra konto', select('accountId', state.accounts.map(a => [a.id, a.name]), row?.accountId ?? state.accounts[0].id)) + '</div>';
     html += field('Person ved personlig udgift', select('personId', [['', 'Vælg person'], ...state.people.map(p => [p.id, p.name])], row?.personId ?? ''), 'Personlige konti bruger automatisk kontoens ejer. På en fælleskonto vælger du personen.');
     html += '<div class="form-row">' + field('Beløb pr. regning', input('amount', inputMoney(row?.amount ?? 0), 'inputmode="decimal" required')) + field('Betalingsinterval', select('interval', Object.entries(labels), row?.interval ?? 1)) + '</div>';
+    html += '<div class="form-row">' + field('Betalingsdag i måneden', input('paymentDay', row?.paymentDay ?? 1, 'type="number" min="1" max="31" step="1" required'), 'Ved korte måneder bruges månedens sidste dag.') + field('Budgetkategori', select('categoryId', [['', 'Uden kategori'], ...state.categories.map(c => [c.id, c.name])], row?.categoryId ?? ''), 'Opret egne kategorier under Budgetposter → Administrer kategorier.') + '</div>';
     html += field('Hvordan indgår udgiften i budgettet?', select('mode', [['monthly', 'Fordelt pr. måned'], ['due', 'Kun i betalingsmåneden']], row?.mode ?? 'monthly'), 'En årlig regning på 12.000 kr. bliver enten 1.000 kr. pr. måned eller 12.000 kr. i betalingsmåneden.');
     html += field('Første måned / første betalingsmåned', input('startMonth', row?.startMonth ?? month, 'type="month" min="2000-01" max="2199-12" required'), 'Intervallet regnes fra denne måned. Beløbsændringer gemmes i den valgte månedsversion og ændrer ikke tidligere måneder.');
   }
@@ -190,8 +221,13 @@ $('#edit-form').addEventListener('submit', event => {
     let row = { id, name: f.name.value.trim() };
     if (kind === 'people') row = { ...row, income: amount(f.income.value), allocation: f.allocation.value, value: f.allocation.value === 'auto' ? 0 : amount(f.value.value) };
     if (kind === 'accounts') row.ownerId = f.ownerId.value || null;
-    if (kind === 'items') row = { ...row, amount: amount(f.amount.value), kind: f.kind.value, accountId: f.accountId.value, personId: f.kind.value === 'personal' ? f.personId.value : null, interval: Number(f.interval.value), mode: f.mode.value, startMonth: f.startMonth.value };
+    if (kind === 'items') row = { ...row, amount: amount(f.amount.value), kind: f.kind.value, accountId: f.accountId.value, personId: f.kind.value === 'personal' ? f.personId.value : null, interval: Number(f.interval.value), mode: f.mode.value, startMonth: f.startMonth.value, paymentDay: Number(f.paymentDay.value), categoryId: f.categoryId.value || null };
     const copy = structuredClone(state); const index = copy[kind].findIndex(r => r.id === id);
+    if (kind === 'items' && index >= 0) {
+      const previous = copy.items[index];
+      if (previous.paymentDay !== row.paymentDay || previous.startMonth !== row.startMonth || previous.interval !== row.interval)
+        copy.payments = copy.payments.filter(itemId => itemId !== id);
+    }
     if (index < 0) copy[kind].push(row); else copy[kind][index] = row;
     if (busy || loaded.closed) throw new Error('Vent, til den igangværende handling er færdig.');
     state = validateBudget(copy); dirty = true; errorMessage = ''; $('#editor').close(); render(); void save();

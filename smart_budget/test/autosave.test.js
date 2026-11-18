@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { webcrypto } from 'node:crypto';
 import { calculate, validateBudget } from '../src/budget.js';
 import { BudgetStore } from '../src/store.js';
+import { fixture } from './fixtures.js';
 
 // Exercise the actual UI event handlers with a small DOM adapter and the real store.
 // This verifies persistence behavior, not visual layout or browser rendering.
@@ -27,7 +28,7 @@ function harness(store) {
     querySelectorAll(selector) {
       const key = /^\[data-(.+)\]$/.exec(selector)?.[1];
       if (!key) return [];
-      const html = key === 'tab' ? ['overview', 'people', 'accounts', 'items', 'ledger'].map(t => `<button data-tab="${t}">`).join('') : node('#content').innerHTML;
+      const html = key === 'tab' ? ['overview', 'people', 'accounts', 'items', 'categories', 'ledger'].map(t => `<button data-tab="${t}">`).join('') : node('#content').innerHTML;
       return [...html.matchAll(new RegExp(`<button[^>]*data-${key}="([^"]+)"[^>]*>`, 'g'))].map(match => {
         const id = /data-id="([^"]+)"/.exec(match[0])?.[1];
         const element = node(`action:${key}:${match[1]}:${id ?? ''}`);
@@ -36,7 +37,7 @@ function harness(store) {
       });
     }
   };
-  for (const name of ['name', 'income', 'allocation', 'value']) node('#edit-form').elements[name] = new Element();
+  for (const name of ['name', 'income', 'allocation', 'value', 'amount', 'accountId', 'kind', 'personId', 'interval', 'mode', 'startMonth', 'paymentDay', 'categoryId']) node('#edit-form').elements[name] = new Element();
   const window = new Element();
   const control = { fail: false, gate: null, puts: 0, month: null };
   const fetch = async (url, options) => {
@@ -125,4 +126,40 @@ test('autosave does not close a month; explicit close and reopen preserve the sa
     assert.equal(store.get(ui.control.month).closed, false);
     assert.equal(store.get(ui.control.month).state.people.length, 1);
   } finally { store.close(); }
+});
+
+test('payment action automatically saves and can undo a month-specific payment mark', async () => {
+  const store = new BudgetStore(':memory:');
+  try {
+    const now=new Date();const month=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const b=fixture();b.items.forEach(i=>i.startMonth='2000-01');store.save(month,b,store.get(month).revision);
+    const ui=harness(store);await settle();await ui.action('tab','items');
+    assert.match(ui.node('#content').innerHTML,/Markér betalt/);
+    await ui.action('payment','one');await settle();
+    assert.deepEqual(store.get(month).state.payments,['one']);
+    assert.match(ui.node('#content').innerHTML,/payment-badge paid/);
+    await ui.action('payment','one');await settle();assert.deepEqual(store.get(month).state.payments,[]);
+    await ui.action('payment','one');await settle();
+    await ui.action('remove','items','one');await settle();
+    assert.equal(store.get(month).state.items.some(i=>i.id==='one'),false);
+    assert.deepEqual(store.get(month).state.payments,[]);
+  } finally {store.close();}
+});
+
+test('users can create a category and assign it with a payment day in the item editor', async () => {
+  const store=new BudgetStore(':memory:');
+  try {
+    const now=new Date();const month=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const b=fixture();b.items.forEach(i=>i.startMonth='2000-01');store.save(month,b,store.get(month).revision);
+    const ui=harness(store);await settle();await ui.action('tab','categories');await ui.action('add','categories');
+    ui.node('#edit-form').elements.name.value='Min kategori';ui.node('#edit-form').emit('submit');await settle();
+    const category=store.get(month).state.categories[0];assert.equal(category.name,'Min kategori');
+    await ui.action('tab','items');await ui.action('edit','items','one');
+    assert.match(ui.node('#fields').innerHTML,/name="paymentDay" value="1"/);
+    const f=ui.node('#edit-form').elements;
+    for(const [key,value] of Object.entries({name:'Fælles regning A',amount:'3000',kind:'shared',accountId:'a-account',personId:'',interval:'1',mode:'monthly',startMonth:'2000-01',paymentDay:'15',categoryId:category.id})) f[key].value=value;
+    ui.node('#edit-form').emit('submit');await settle();
+    const item=store.get(month).state.items.find(i=>i.id==='one');assert.equal(item.paymentDay,15);assert.equal(item.categoryId,category.id);
+    assert.match(ui.node('#content').innerHTML,/Min kategori/);
+  } finally {store.close();}
 });

@@ -1,6 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import { createHash } from 'node:crypto';
-import { BudgetError, calculate, emptyBudget, validMonth, validateBudget } from './budget.js';
+import { BudgetError, calculate, emptyBudget, validMonth, validateBudget, paymentInfo } from './budget.js';
 
 export class BudgetStore {
   constructor(filename) {
@@ -15,11 +15,21 @@ export class BudgetStore {
     validMonth(month);
     const row = this.db.prepare('SELECT * FROM months WHERE month <= ? ORDER BY month DESC LIMIT 1').get(month);
     const direct = row?.month === month;
-    const state = row ? JSON.parse(row.state) : emptyBudget();
+    // Read old JSON documents with defaults; never rewrite historical records on upgrade.
+    const state = row ? validateBudget(JSON.parse(row.state)) : emptyBudget();
+    if (!direct) state.payments = []; // A payment belongs only to its saved month.
+    let result;
+    if (direct && row.closed) {
+      result = JSON.parse(row.snapshot);
+      // Legacy locked snapshots keep their financial values, with new display fields defaulted.
+      result.lines = result.lines.map(line => line.paymentStatus !== undefined ? line : {
+        ...line, paymentDay: 1, categoryId: null, ...paymentInfo(line, month, state.payments)
+      });
+    } else result = calculate(state, month);
     const revision = createHash('sha256').update(`${month}:${row?.month ?? ''}:${row?.revision ?? 0}`).digest('hex');
     return { month, state, revision, sourceMonth: row?.month ?? null, saved: direct,
       closed: Boolean(direct && row.closed), updatedAt: direct ? row.updated_at : null,
-      result: direct && row.closed ? JSON.parse(row.snapshot) : calculate(state, month) };
+      result };
   }
   transaction(action) {
     this.db.exec('BEGIN IMMEDIATE');
@@ -32,6 +42,10 @@ export class BudgetStore {
       if (current.closed) throw new BudgetError('Måneden er afsluttet. Genåbn den før ændringer.', 423);
       if (current.revision !== revision) throw new BudgetError('Budgettet er ændret i en anden fane. Genindlæs måneden før du gemmer.', 409);
       const clean = validateBudget(state);
+      for (const itemId of clean.payments) {
+        if (!paymentInfo(clean.items.find(i => i.id === itemId), month).dueDate)
+          throw new BudgetError('Posten har ingen betaling i den valgte måned.');
+      }
       this.db.prepare(`INSERT INTO months(month,state,updated_at) VALUES (?,?,?)
         ON CONFLICT(month) DO UPDATE SET state=excluded.state, revision=months.revision+1, updated_at=excluded.updated_at`)
         .run(month, JSON.stringify(clean), new Date().toISOString());

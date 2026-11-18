@@ -1,7 +1,7 @@
 export class BudgetError extends Error {
   constructor(message, status = 400) { super(message); this.status = status; }
 }
-export const emptyBudget = () => ({ people: [], accounts: [], items: [] });
+export const emptyBudget = () => ({ people: [], accounts: [], items: [], categories: [], payments: [] });
 export function validMonth(value) {
   if (typeof value !== 'string' || !/^(20\d{2}|21\d{2})-(0[1-9]|1[0-2])$/.test(value))
     throw new BudgetError('Vælg en måned mellem år 2000 og 2199.');
@@ -46,6 +46,13 @@ export function validateBudget(raw) {
     return { id: id(a.id), name: name(a.name), ownerId: a.ownerId };
   });
   unique(accounts);
+  if (raw.categories !== undefined && !Array.isArray(raw.categories)) fail('Kategorier skal være en liste.');
+  if ((raw.categories?.length ?? 0) > 500) fail('Der må højst være 500 kategorier.');
+  const categories = (raw.categories ?? []).map(c => ({ id: id(c.id), name: name(c.name) }));
+  unique(categories);
+  if (new Set(categories.map(c => c.name.toLocaleLowerCase('da-DK'))).size !== categories.length)
+    fail('En kategori med det navn findes allerede.');
+  const categoryIds = new Set(categories.map(c => c.id));
   const accountMap = new Map(accounts.map(a => [a.id, a]));
   const items = raw.items.map(i => {
     const account = accountMap.get(i.accountId);
@@ -56,14 +63,37 @@ export function validateBudget(raw) {
     if (i.kind === 'personal' && !personIds.has(i.personId)) fail('Vælg den person, som den personlige udgift tilhører.');
     if (i.kind === 'personal' && account.ownerId !== null && account.ownerId !== i.personId)
       fail('En personlig udgift på en personlig konto skal tilhøre kontoens ejer.');
+    const paymentDay = i.paymentDay ?? 1;
+    if (!Number.isInteger(paymentDay) || paymentDay < 1 || paymentDay > 31) fail('Betalingsdag skal være et helt tal fra 1 til 31.');
+    const categoryId = i.categoryId ?? null;
+    if (categoryId !== null && !categoryIds.has(categoryId)) fail('En post bruger en kategori, der ikke findes. Flyt posten til en anden kategori først.');
     return { id: id(i.id), name: name(i.name), amount: money(i.amount, 'Udgift'), accountId: account.id,
       kind: i.kind, personId: i.kind === 'personal' ? i.personId : null,
-      interval: i.interval, mode: i.mode, startMonth: validMonth(i.startMonth) };
+      interval: i.interval, mode: i.mode, startMonth: validMonth(i.startMonth), paymentDay, categoryId };
   });
   unique(items);
-  return { people, accounts, items };
+  if (raw.payments !== undefined && !Array.isArray(raw.payments)) fail('Betalingsregistreringer skal være en liste.');
+  const itemIds = new Set(items.map(i => i.id));
+  const payments = (raw.payments ?? []).map(value => {
+    if (!itemIds.has(value)) fail('Betalingsregistreringen bruger en post, der ikke findes.');
+    return id(value);
+  });
+  if (new Set(payments).size !== payments.length) fail('En betaling er registreret flere gange.');
+  return { people, accounts, items, categories, payments };
 }
 const monthIndex = m => Number(m.slice(0, 4)) * 12 + Number(m.slice(5)) - 1;
+export function danishDate(now = new Date()) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now).map(p => [p.type, p.value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+export function paymentInfo(item, month, payments = [], today = danishDate()) {
+  validMonth(month);
+  const elapsed = monthIndex(month) - monthIndex(item.startMonth);
+  if (elapsed < 0 || elapsed % item.interval !== 0) return { dueDate: null, paymentStatus: null };
+  const lastDay = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5)), 0)).getUTCDate();
+  const dueDate = `${month}-${String(Math.min(item.paymentDay ?? 1, lastDay)).padStart(2, '0')}`;
+  return { dueDate, paymentStatus: payments.includes(item.id) ? 'paid' : dueDate < today ? 'overdue' : 'upcoming' };
+}
 export function itemAmount(item, month) {
   const elapsed = monthIndex(month) - monthIndex(item.startMonth);
   if (elapsed < 0) return 0;
@@ -76,11 +106,11 @@ function divide(total, count) {
   const base = Math.floor(total / count), extra = total - base * count;
   return Array.from({ length: count }, (_, n) => base + (n < extra ? 1 : 0));
 }
-export function calculate(raw, month) {
+export function calculate(raw, month, today = danishDate()) {
   validMonth(month);
   const budget = validateBudget(raw);
   const accounts = new Map(budget.accounts.map(a => [a.id, a]));
-  const lines = budget.items.map(i => ({ ...i, monthlyAmount: itemAmount(i, month) }));
+  const lines = budget.items.map(i => ({ ...i, monthlyAmount: itemAmount(i, month), ...paymentInfo(i, month, budget.payments, today) }));
   const income = budget.people.reduce((n, p) => n + p.income, 0);
   const sharedExpenses = lines.filter(i => i.kind === 'shared').reduce((n, i) => n + i.monthlyAmount, 0);
   const pool = income - sharedExpenses;

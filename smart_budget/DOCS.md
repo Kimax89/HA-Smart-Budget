@@ -55,6 +55,26 @@ Første måned er også ankeret for betalingsintervallet. Posten tæller ikke f�
 
 Alle beløb opbevares i hele øre. Hvis en regning ikke kan deles præcist, fordeles de overskydende øre på de første måneder i intervallet. Eksempel: 100 kr. hvert halve år bliver 16,67 kr. i fire måneder og 16,66 kr. i to måneder. Der mistes ingen øre.
 
+## Betalingsdag og betalingsstatus
+
+Hver budgetpost har en betalingsdag fra 1 til 31. Standard er den 1., også for eksisterende poster. Hvis dagen ikke findes i måneden, bruges månedens sidste dag, eksempelvis 28. eller 29. februar. Datoer vurderes i tidszonen Europe/Copenhagen.
+
+Under **Budgetposter** vises betalingsdato og status:
+
+- **Kommende**: Betalingsdatoen er i dag eller senere.
+- **Overskredet**: Betalingsdatoen er passeret, og posten er ikke markeret betalt.
+- **Betalt**: Du har valgt **Markér betalt**. Brug **Markér ubetalt** for at rette en fejl.
+
+Markeringen gemmes automatisk og gælder kun den valgte måned. Den videreføres ikke til efterfølgende måneder. Betalingsstatus er en manuel registrering og ændrer ikke budgetbeløbet eller rådighedsfordelingen. Der udføres ingen bankoverførsel. Afsluttede måneder er låst; genåbn dem før en betalingsmarkering ændres.
+
+Betalingsintervallet afgør den faktiske betalingsmåned, uanset om budgetbeløbet er fordelt pr. måned. En årlig regning viser derfor kun en betalingsdato og betalingsstatus i den årlige betalingsmåned. Øvrige måneder viser **Ingen betaling denne måned**, selv om de indeholder en hensættelse. Flyttes betalingsdag, første betalingsmåned eller interval i redigeringsdialogen, fjernes en eventuel betalingsmarkering for den post i den valgte måned.
+
+## Egne budgetkategorier
+
+Åbn **Kategorier** i menuen eller **Budgetposter → Administrer kategorier**. Opret og navngiv kategorierne selv; der oprettes ingen standardkategorier. Vælg derefter en kategori i budgetpostens redigeringsdialog, eller behold **Uden kategori**. Kategorier er uafhængige af både konto og fælles/personlig. Kategorioversigten viser antal poster og månedens samlede budgetbeløb.
+
+Du kan omdøbe og fjerne kategorier. Flyt først tilknyttede poster til en anden kategori eller **Uden kategori**, hvis kategorien skal slettes. Kategorier gemmes med månedsversionen og videreføres som udgangspunkt til næste måned. Ændringer påvirker ikke andre gemte måneder.
+
 ## Måneder, ændringer og historik
 
 En måned uden egen gemt version tager udgangspunkt i den senest gemte tidligere måned. Indtægter, personer, konti og poster videreføres; intervaller beregnes for den valgte måned.
@@ -93,4 +113,4 @@ Home Assistant og Docker bruger samme kode. Ved bygning til Home Assistant bruge
 
 ## Første version
 
-Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.1.8 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
+Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.0 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
