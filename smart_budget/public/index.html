@@ -9,13 +9,13 @@
   <script type="module" src="./app.js"></script>
 </head>
 <body>
-  <header class="topbar"><a class="brand" href="./"><span class="brand-icon">◈</span> Smart Budget <span class="brand-tag">HUSHOLDNING</span></a><details id="navigation-menu" class="header-menu"><summary id="navigation-toggle" aria-label="Navigation"><span class="burger-icon" aria-hidden="true"><span></span><span></span><span></span></span><span class="sr-only">Menu</span></summary><nav class="header-nav" aria-label="Budgetvisninger"><button data-tab="overview" class="active">Overblik</button><button data-tab="items">Budgetposter</button><button data-tab="people">Personer</button><button data-tab="accounts">Konti</button><button data-tab="ledger">Regnskab</button></nav></details></header>
+  <header class="topbar"><a class="brand" href="./"><span class="brand-icon">◈</span> Smart Budget</a><details id="navigation-menu" class="header-menu"><summary id="navigation-toggle" aria-label="Navigation"><span class="burger-icon" aria-hidden="true"><span></span><span></span><span></span></span><span class="sr-only">Menu</span></summary><nav class="header-nav" aria-label="Budgetvisninger"><button data-tab="overview" class="active">Overblik</button><button data-tab="items">Budgetposter</button><button data-tab="people">Personer</button><button data-tab="accounts">Konti</button><button data-tab="ledger">Regnskab</button></nav></details></header>
   <main>
-    <section class="heading"><div><p class="eyebrow">ET FÆLLES OVERBLIK</p><h1>Plads til hverdagen.</h1><p class="subtitle">Fordel udgifterne. Find balancen. Planlæg næste måned.</p></div><div class="month-control"><button id="prev" class="icon-button" aria-label="Forrige måned">‹</button><label><span class="sr-only">Vælg måned</span><input id="month" type="month" min="2000-01" max="2199-12"></label><button id="next" class="icon-button" aria-label="Næste måned">›</button></div></section>
+    <section class="heading"><div class="month-control"><button id="prev" class="icon-button" aria-label="Forrige måned">‹</button><label><span class="sr-only">Vælg måned</span><input id="month" type="month" min="2000-01" max="2199-12"></label><button id="next" class="icon-button" aria-label="Næste måned">›</button></div></section>
     <div id="status" class="status-row"></div>
     <div id="messages" aria-live="polite"></div>
     <section id="content" aria-live="polite"><p>Henter budget…</p></section>
-    <footer><span>Smart Budget · 0.1.4</span><span>Beløb i danske kroner · Personlige udgifter trækkes efter fordeling</span></footer>
+    <footer><span>Smart Budget · 0.1.5</span><span>Beløb i danske kroner · Personlige udgifter trækkes efter fordeling</span></footer>
   </main>
   <dialog id="editor"><form id="edit-form"><div class="dialog-heading"><h2 id="dialog-title"></h2><button type="button" id="cancel-x" class="icon-button" aria-label="Luk">×</button></div><div id="fields"></div><p id="form-error" class="error" role="alert"></p><div class="dialog-actions"><button id="cancel" type="button" class="secondary">Annuller</button><button type="submit" class="primary">Anvend</button></div></form></dialog>
   <div id="toast" class="toast" role="status" hidden></div>
