@@ -67,7 +67,11 @@ function renderStatus() {
   $('#prev').disabled = busy || month === '2000-01'; $('#next').disabled = busy || month === '2199-12'; $('#month').disabled = busy;
 }
 function card(label, value, note, highlight = false) { return `<div class="card ${highlight ? 'highlight' : ''}"><div class="card-label">${label}</div><div class="card-value">${kr(value)}</div><div class="card-note">${note}</div></div>`; }
-function personLabel(p, n = 0) { return `<span class="person"><span class="avatar ${n % 2 ? 'alt' : ''}">${esc(p.name.slice(0, 1).toUpperCase())}</span>${esc(p.name)}</span>`; }
+function editName(kind, row) {
+  const label = esc(row.name);
+  return loaded.closed ? label : '<button type="button" class="edit-name" data-edit="' + kind + '" data-id="' + esc(row.id) + '" aria-label="Ret ' + (kind === 'people' ? 'person ' : 'budgetpost ') + label + '">' + label + '</button>';
+}
+function personLabel(p, n = 0) { return `<span class="person"><span class="avatar ${n % 2 ? 'alt' : ''}">${esc(p.name.slice(0, 1).toUpperCase())}</span>${editName('people', p)}</span>`; }
 function panel(title, subtitle, body, action = '') { return `<div class="panel"><div class="panel-heading"><div><h2>${title}</h2>${subtitle ? `<p>${subtitle}</p>` : ''}</div>${action}</div>${body}</div>`; }
 function table(headers, rows) { return `<div class="table-scroll"><table><thead><tr>${headers.map((h, i) => `<th${i > 0 ? ' class="num"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`; }
 function empty(title, text, action = '') { return `<div class="empty"><h2>${title}</h2>${text}${action}</div>`; }
@@ -91,7 +95,7 @@ function accountOverview(r) {
       const rows = entries.map(line => {
         const person = kind === 'personal' ? state.people.find(p => p.id === line.personId) : null;
         const detail = line.interval === 1 ? labels[1] : labels[line.interval] + ' · ' + kr(line.amount) + ' pr. regning · ' + (line.mode === 'monthly' ? 'fordelt pr. måned' : 'kun betalingsmåned');
-        return '<tr><td><strong>' + esc(line.name) + '</strong>' + (person ? '<br><span class="muted small">' + esc(person.name) + '</span>' : '') + '<br><span class="muted small">' + esc(detail) + '</span></td><td class="num">' + kr(line.monthlyAmount) + '</td></tr>';
+        return '<tr><td><strong>' + editName('items', line) + '</strong>' + (person ? '<br><span class="muted small">' + editName('people', person) + '</span>' : '') + '<br><span class="muted small">' + esc(detail) + '</span></td><td class="num">' + kr(line.monthlyAmount) + '</td></tr>';
       }).join('');
       const subtotal = entries.reduce((sum, line) => sum + line.monthlyAmount, 0);
       return '<h3 class="account-group-title">' + label + '</h3>' + table(['Post', 'Denne måned'], rows + '<tr class="account-subtotal"><td>I alt ' + label.toLowerCase() + '</td><td class="num strong">' + kr(subtotal) + '</td></tr>');
@@ -109,7 +113,7 @@ function accountsView(r) {
 }
 function itemsView(r) {
   const rows = r.lines.filter(i => `${i.name} ${state.accounts.find(a => a.id === i.accountId)?.name}`.toLowerCase().includes(filter.toLowerCase()));
-  return `<div class="section-tools"><label class="sr-only" for="filter">Søg i budgetposter</label><input id="filter" type="search" placeholder="Søg i poster eller konti…" value="${esc(filter)}"></div>` + panel('Budgetposter', 'Beløbet er pr. regning. Månedens budget afhænger af interval og fordelingsvalg.', rows.length ? table(['Post', 'Type / person', 'Betales fra', 'Pr. regning', 'Interval', 'Denne måned', 'Handling'], rows.map(i => `<tr><td><strong>${esc(i.name)}</strong><br><span class="muted small">${i.mode === 'monthly' ? 'Fordelt pr. måned' : 'Kun betalingsmåned'} · fra ${esc(i.startMonth)}</span></td><td class="num">${i.kind === 'shared' ? 'Fælles' : esc(state.people.find(p => p.id === i.personId)?.name)}</td><td class="num">${esc(state.accounts.find(a => a.id === i.accountId)?.name)}</td><td class="num">${kr(i.amount)}</td><td class="num">${labels[i.interval]}</td><td class="num strong">${kr(i.monthlyAmount)}</td><td class="num">${rowActions('items', i.id)}</td></tr>`).join('')) : empty('Ingen budgetposter fundet', state.accounts.length ? 'Tilføj den første udgift for at beregne fordelingen.' : 'Opret en konto, før du tilføjer udgifter.'), addButton('items', '+ Tilføj post'));
+  return `<div class="section-tools"><label class="sr-only" for="filter">Søg i budgetposter</label><input id="filter" type="search" placeholder="Søg i poster eller konti…" value="${esc(filter)}"></div>` + panel('Budgetposter', 'Beløbet er pr. regning. Månedens budget afhænger af interval og fordelingsvalg.', rows.length ? table(['Post', 'Type / person', 'Betales fra', 'Pr. regning', 'Interval', 'Denne måned', 'Handling'], rows.map(i => `<tr><td><strong>${editName('items', i)}</strong><br><span class="muted small">${i.mode === 'monthly' ? 'Fordelt pr. måned' : 'Kun betalingsmåned'} · fra ${esc(i.startMonth)}</span></td><td class="num">${i.kind === 'shared' ? 'Fælles' : esc(state.people.find(p => p.id === i.personId)?.name)}</td><td class="num">${esc(state.accounts.find(a => a.id === i.accountId)?.name)}</td><td class="num">${kr(i.amount)}</td><td class="num">${labels[i.interval]}</td><td class="num strong">${kr(i.monthlyAmount)}</td><td class="num">${rowActions('items', i.id)}</td></tr>`).join('')) : empty('Ingen budgetposter fundet', state.accounts.length ? 'Tilføj den første udgift for at beregne fordelingen.' : 'Opret en konto, før du tilføjer udgifter.'), addButton('items', '+ Tilføj post'));
 }
 function ledgerView() {
   if (!ledger) return '<p class="muted">Henter regnskab…</p>';
