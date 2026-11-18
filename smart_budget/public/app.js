@@ -81,7 +81,7 @@ function rowActions(kind, id) { return loaded.closed ? '' : `<button class="tabl
 function overview(r) {
   let html = '';
   if (!state.people.length) return html + panel('Velkommen til dit budget', '', empty('Begynd med personerne', 'Tilføj personer og indtægter. Opret derefter konti og budgetposter.<br>Budgettet starter uden eksempeldata.', addButton('people', '+ Tilføj person'))) + accountOverview(r);
-  html += panel('Personer', '', table(['Person', 'Indkomst', 'Fælles fra egen konto', 'Til fællespuljen', 'Før personlige', 'Efter personlige'], r.people.map((p, n) => `<tr><td>${personLabel(p, n)}</td><td class="num">${kr(p.income)}</td><td class="num">${kr(p.ownShared)}</td><td class="num strong ${p.transfer < 0 ? 'negative' : ''}">${kr(p.transfer)}</td><td class="num">${kr(p.before)}</td><td class="num">${kr(p.after)}</td></tr>`).join('')));
+  html += '<div class="panel" aria-label="Personfordeling">' + table(['Person', 'Indkomst', 'Fælles fra egen konto', 'Til fællespuljen', 'Før personlige', 'Efter personlige'], r.people.map((p, n) => `<tr><td>${personLabel(p, n)}</td><td class="num">${kr(p.income)}</td><td class="num">${kr(p.ownShared)}</td><td class="num strong ${p.transfer < 0 ? 'negative' : ''}">${kr(p.transfer)}</td><td class="num">${kr(p.before)}</td><td class="num">${kr(p.after)}</td></tr>`).join('')) + '</div>';
   html += accountOverview(r);
   return html;
 }
