@@ -14,6 +14,8 @@ Appen bruger Ingress på intern port 8099, accepterer kun Supervisorens proxy og
 
 SQLite-databasen ligger i appens private `/data/budget.sqlite`. Der kræves ingen cloudtjeneste eller bankforbindelse.
 
+Navigationen til Overblik, Budgetposter, Personer, Konti og Regnskab findes i burgermenuen øverst til højre. Menuen kan betjenes med tastatur og lukkes med Escape eller ved klik udenfor.
+
 ## Første budget
 
 1. Vælg den måned, budgettet begynder i.
@@ -91,4 +93,4 @@ Home Assistant og Docker bruger samme kode. Ved bygning til Home Assistant bruge
 
 ## Første version
 
-Ingen data fra referencearket indgår i repositoryet. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.1.3 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
+Ingen data fra referencearket indgår i repositoryet. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.1.4 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.

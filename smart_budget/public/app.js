@@ -200,9 +200,19 @@ function stepMonth(delta) { const d = new Date(`${month}-01T12:00:00Z`); d.setUT
 $('#prev').addEventListener('click', () => stepMonth(-1)); $('#next').addEventListener('click', () => stepMonth(1));
 document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', async () => {
   if (busy || !loaded) return;
-  tab = button.dataset.tab; render();
+  tab = button.dataset.tab; $('#navigation-menu').open = false; render();
   if (tab === 'ledger') { try { ledger = await api(`ledger?year=${month.slice(0, 4)}`); render(); } catch (error) { errorMessage = error.message; render(); } }
 }));
+window.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && $('#navigation-menu').open) {
+    $('#navigation-menu').open = false;
+    $('#navigation-toggle').focus();
+  }
+});
+window.addEventListener('click', event => {
+  const menu = $('#navigation-menu');
+  if (menu.open && !menu.contains(event.target)) menu.open = false;
+});
 window.addEventListener('beforeunload', event => { if (dirty) { event.preventDefault(); event.returnValue = ''; } });
 $('#month').value = month;
 load(month);
