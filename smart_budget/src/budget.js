@@ -2,6 +2,7 @@ export class BudgetError extends Error {
   constructor(message, status = 400) { super(message); this.status = status; }
 }
 export const emptyBudget = () => ({ people: [], accounts: [], items: [], categories: [], payments: [] });
+export const accountIcons = ['auto', 'house', 'user', 'users', 'wallet', 'piggy-bank', 'landmark', 'credit-card', 'car', 'shopping-cart', 'briefcase'];
 export function validMonth(value) {
   if (typeof value !== 'string' || !/^(20\d{2}|21\d{2})-(0[1-9]|1[0-2])$/.test(value))
     throw new BudgetError('Vælg en måned mellem år 2000 og 2199.');
@@ -43,7 +44,9 @@ export function validateBudget(raw) {
   const personIds = new Set(people.map(p => p.id));
   const accounts = raw.accounts.map(a => {
     if (a.ownerId !== null && !personIds.has(a.ownerId)) fail('Kontoens ejer findes ikke. Fjern eller flyt kontoen først.');
-    return { id: id(a.id), name: name(a.name), ownerId: a.ownerId };
+    const icon = a.icon ?? 'auto';
+    if (!accountIcons.includes(icon)) fail('Vælg et gyldigt kontoikon.');
+    return { id: id(a.id), name: name(a.name), ownerId: a.ownerId, icon };
   });
   unique(accounts);
   if (raw.categories !== undefined && !Array.isArray(raw.categories)) fail('Kategorier skal være en liste.');

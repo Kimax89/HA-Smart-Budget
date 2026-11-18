@@ -8,6 +8,10 @@ const today = new Date();
 let month = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 let loaded, state, dirty = false, tab = 'overview', ledger, busy = false, errorMessage = '', filter = '';
 let editing, toastTimer, saving = false;
+const collapsedAccounts = new Set();
+const iconChoices = [['auto','Automatisk (hus/person)'],['house','Hus'],['user','Person'],['users','Personer'],['wallet','Pung'],['piggy-bank','Sparegris'],['landmark','Bank'],['credit-card','Betalingskort'],['car','Bil'],['shopping-cart','Indkøb'],['briefcase','Arbejde']];
+const resolvedIcon = account => !account.icon || account.icon === 'auto' ? (account.ownerId === null ? 'house' : 'user') : account.icon;
+const accountIcon = account => '<img class="account-icon" src="./icons/' + resolvedIcon(account) + '.svg" alt="" width="22" height="22">';
 const labels = { 1: 'Hver måned', 2: 'Hver anden måned', 6: 'Hvert halve år', 12: 'Én gang om året' };
 const monthName = m => new Intl.DateTimeFormat('da-DK', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${m}-01T12:00:00Z`));
 function amount(value) {
@@ -101,8 +105,8 @@ function accountOverview(r) {
       const subtotal = entries.reduce((sum, line) => sum + line.monthlyAmount, 0);
       return '<h3 class="account-group-title">' + label + '</h3>' + table(['Post', 'Denne måned'], rows + '<tr class="account-subtotal"><td>I alt ' + label.toLowerCase() + '</td><td class="num strong">' + kr(subtotal) + '</td></tr>');
     }).join('');
-    return panel(esc(account.name), owner ? 'Personlig konto · ' + esc(owner.name) : 'Fælleskonto',
-      (groups || empty('Ingen poster på kontoen', 'Tilføj budgetposter under Budgetposter.')) + '<div class="account-total"><span>Samlet på kontoen</span><strong>' + kr(account.shared + account.personal) + '</strong></div>');
+    const key = month + ':' + account.id;
+    return '<details class="panel account-panel" data-account-panel="' + account.id + '" ' + (collapsedAccounts.has(key) ? '' : 'open') + '><summary class="account-panel-heading"><span class="account-identity">' + accountIcon(account) + '<span><span class="account-title">' + esc(account.name) + '</span><span class="account-owner">' + (owner ? 'Personlig konto · ' + esc(owner.name) : 'Fælleskonto') + '</span></span></span><span class="account-heading-total"><span class="sr-only">Samlet udgift </span>' + kr(account.shared + account.personal) + '<span class="account-chevron" aria-hidden="true"></span></span></summary><div class="account-panel-body">' + (groups || empty('Ingen poster på kontoen', 'Tilføj budgetposter under Budgetposter.')) + '</div></details>';
   }).join('');
   return '<section aria-label="Konti og budgetposter"><div class="panel-heading account-section-heading"><div><h2>Konti og budgetposter</h2></div></div><div class="account-grid">' + cards + '</div></section>';
 }
@@ -110,7 +114,7 @@ function peopleView(r) {
   return panel('Personer og indtægter', 'Ændringer gemmes automatisk i den valgte måned.', state.people.length ? table(['Person', 'Indkomst', 'Fordeling', 'Før personlige', 'Handling'], state.people.map((p, n) => `<tr><td>${personLabel(p, n)}</td><td class="num">${kr(p.income)}</td><td class="num">${p.allocation === 'auto' ? 'Automatisk rest' : p.allocation === 'percent' ? `${inputMoney(p.value)} % af puljen` : `${kr(p.value)} fast`}</td><td class="num strong">${kr(r.people[n].before)}</td><td class="num">${rowActions('people', p.id)}</td></tr>`).join('')) + '<div class="hint">Procent er en andel af hele puljen: 10 % og 90 % giver den fordeling direkte. Faste beløb trækkes også fra puljen. En eventuel rest deles ligeligt mellem personer med »Automatisk rest«. Uden automatiske personer skal hele puljen være fordelt.</div>' : empty('Hvem er med i budgettet?', 'Opret hver person og deres månedlige indkomst.'), addButton('people', '+ Tilføj person'));
 }
 function accountsView(r) {
-  return panel('Konti', 'En konto uden personlig ejer er en fælleskonto.', state.accounts.length ? table(['Konto', 'Tilknyttet person', 'Fælles udgifter', 'Personlige udgifter', 'Handling'], r.accounts.map(a => `<tr><td><strong>${esc(a.name)}</strong></td><td class="num">${esc(state.people.find(p => p.id === a.ownerId)?.name ?? 'Fælleskonto')}</td><td class="num">${kr(a.shared)}</td><td class="num">${kr(a.personal)}</td><td class="num">${rowActions('accounts', a.id)}</td></tr>`).join('')) + '<div class="hint">Fælles udgifter på en personlig konto modregnes i ejerens overførsel. Hvis I har flere fælleskonti, viser overblikket behovet på hver konto; personernes bidrag vises samlet.</div>' : empty('Hvor betales regningerne?', 'Opret både fælleskonti og personlige konti.'), addButton('accounts', '+ Tilføj konto'));
+  return panel('Konti', 'En konto uden personlig ejer er en fælleskonto.', state.accounts.length ? table(['Konto', 'Tilknyttet person', 'Fælles udgifter', 'Personlige udgifter', 'Handling'], r.accounts.map(a => `<tr><td><span class="account-list-name">${accountIcon(a)}<strong>${esc(a.name)}</strong></span></td><td class="num">${esc(state.people.find(p => p.id === a.ownerId)?.name ?? 'Fælleskonto')}</td><td class="num">${kr(a.shared)}</td><td class="num">${kr(a.personal)}</td><td class="num">${rowActions('accounts', a.id)}</td></tr>`).join('')) + '<div class="hint">Fælles udgifter på en personlig konto modregnes i ejerens overførsel. Hvis I har flere fælleskonti, viser overblikket behovet på hver konto; personernes bidrag vises samlet.</div>' : empty('Hvor betales regningerne?', 'Opret både fælleskonti og personlige konti.'), addButton('accounts', '+ Tilføj konto'));
 }
 const paymentLabels = { upcoming: 'Kommende', paid: 'Betalt', overdue: 'Overskredet' };
 function paymentBadge(line) {
@@ -160,6 +164,10 @@ function render() {
   document.querySelectorAll('[data-remove]').forEach(b => b.addEventListener('click', () => removeRow(b.dataset.remove, b.dataset.id)));
   document.querySelectorAll('[data-month]').forEach(b => b.addEventListener('click', () => { tab = 'overview'; load(b.dataset.month); }));
   document.querySelectorAll('[data-payment]').forEach(b => b.addEventListener('click', () => togglePayment(b.dataset.payment)));
+  document.querySelectorAll('[data-account-panel]').forEach(details => {
+    const key = month + ':' + details.dataset.accountPanel;
+    details.addEventListener('toggle', () => { if (!details.isConnected) return; if (details.open) collapsedAccounts.delete(key); else collapsedAccounts.add(key); });
+  });
   $('#manage-categories')?.addEventListener('click', () => { tab = 'categories'; render(); });
   $('#filter')?.addEventListener('input', event => { const start = event.target.selectionStart; filter = event.target.value; render(); $('#filter').focus(); $('#filter').setSelectionRange(start, start); });
 }
@@ -186,6 +194,7 @@ function openEditor(kind, id) {
     html += field('Procent eller fast beløb', input('value', inputMoney(row?.value ?? 0), 'inputmode="decimal" required'), 'Ved procent: skriv fx 10 for 10 %. Ved fast beløb: skriv kroner. Feltet bruges ikke ved automatisk fordeling.');
   } else if (kind === 'accounts') {
     html += field('Kontoens ejer', select('ownerId', [['', 'Fælleskonto · ingen personlig ejer'], ...state.people.map(p => [p.id, p.name])], row?.ownerId ?? ''), 'Fælles udgifter på en personlig konto tæller med i ejerens bidrag.');
+    html += field('Kontoikon', select('icon', iconChoices, row?.icon ?? 'auto') + '<span class="account-icon-preview"><img id="account-icon-preview" class="account-icon" alt="Valgt kontoikon" width="24" height="24"></span>', 'Automatisk bruger et hus til fælleskonti og en person til personlige konti.');
   } else if (kind === 'categories') {
     // Categories need only a name.
   } else {
@@ -208,6 +217,11 @@ function openEditor(kind, id) {
     $('#edit-form').elements.accountId.addEventListener('change', updateOwner);
     $('#edit-form').elements.kind.addEventListener('change', updateOwner); updateOwner();
   }
+  if (kind === 'accounts') {
+    const updateIcon = () => { const f = $('#edit-form').elements; $('#account-icon-preview').src = './icons/' + resolvedIcon({ icon: f.icon.value || 'auto', ownerId: f.ownerId.value || null }) + '.svg'; };
+    $('#edit-form').elements.icon.addEventListener('change', updateIcon);
+    $('#edit-form').elements.ownerId.addEventListener('change', updateIcon); updateIcon();
+  }
   if (kind === 'people') {
     const updateAllocation = () => { $('#edit-form').elements.value.disabled = $('#edit-form').elements.allocation.value === 'auto'; };
     $('#edit-form').elements.allocation.addEventListener('change', updateAllocation); updateAllocation();
@@ -220,7 +234,7 @@ $('#edit-form').addEventListener('submit', event => {
     const f = $('#edit-form').elements; const { kind, id } = editing;
     let row = { id, name: f.name.value.trim() };
     if (kind === 'people') row = { ...row, income: amount(f.income.value), allocation: f.allocation.value, value: f.allocation.value === 'auto' ? 0 : amount(f.value.value) };
-    if (kind === 'accounts') row.ownerId = f.ownerId.value || null;
+    if (kind === 'accounts') { row.ownerId = f.ownerId.value || null; row.icon = f.icon.value || 'auto'; }
     if (kind === 'items') row = { ...row, amount: amount(f.amount.value), kind: f.kind.value, accountId: f.accountId.value, personId: f.kind.value === 'personal' ? f.personId.value : null, interval: Number(f.interval.value), mode: f.mode.value, startMonth: f.startMonth.value, paymentDay: Number(f.paymentDay.value), categoryId: null };
     const copy = structuredClone(state); const index = copy[kind].findIndex(r => r.id === id);
     if (kind === 'items') {

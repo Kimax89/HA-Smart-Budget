@@ -30,6 +30,12 @@ Personlige udgifter på en personlig konto skal tilhøre kontoens ejer. På en f
 
 Under **Overblik** vises alle konti med deres tilknyttede poster, opdelt i fælles og personlige udgifter. Hver post viser beløbet i den valgte måned. Ved længere betalingsintervaller vises også beløbet pr. regning og fordelingsformen. Poster uden beløb i den valgte måned vises med 0 kr., så alle poster stadig kan findes på deres konto. Hver gruppe har en delsum, og hver konto har en samlet sum. Klik på et personnavn eller navnet på en budgetpost for at rette den direkte. Det virker på forsiden og i de relevante lister. I afsluttede måneder er navnene ikke redigerbare; genåbn først måneden.
 
+## Kontoikoner og foldbare kontooversigter
+
+Hver konto viser et ikon og månedens samlede budgetudgift til højre for kontonavnet. Standardvalget **Automatisk** bruger et hus til en fælleskonto og en person til en personlig konto. Under **Konti → Ret** kan du vælge mellem hus, person, personer, pung, sparegris, bank, betalingskort, bil, indkøb og arbejde. Automatisk følger kontotypen, hvis ejeren ændres; et eksplicit valgt ikon bevares.
+
+Klik på kontoens overskrift for at folde budgetposterne sammen eller ud. Kontoens samlede beløb er altid synligt. Alle konti er åbne ved indlæsning; dine sammenfoldninger bevares, mens du arbejder i den samme browserfane. Ikonvalg gemmes automatisk med månedsversionen.
+
 ## Fordeling
 
 Puljen er alle indtægter minus alle fælles udgifter, uanset konto.
@@ -113,4 +119,4 @@ Home Assistant og Docker bruger samme kode. Ved bygning til Home Assistant bruge
 
 ## Første version
 
-Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.1 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
+Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.2 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.

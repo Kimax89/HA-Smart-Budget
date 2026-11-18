@@ -37,7 +37,7 @@ function harness(store) {
       });
     }
   };
-  for (const name of ['name', 'income', 'allocation', 'value', 'amount', 'accountId', 'kind', 'personId', 'interval', 'mode', 'startMonth', 'paymentDay', 'categoryName']) node('#edit-form').elements[name] = new Element();
+  for (const name of ['name', 'income', 'allocation', 'value', 'amount', 'accountId', 'kind', 'personId', 'interval', 'mode', 'startMonth', 'paymentDay', 'categoryName', 'ownerId', 'icon']) node('#edit-form').elements[name] = new Element();
   const window = new Element();
   const control = { fail: false, gate: null, puts: 0, month: null };
   const fetch = async (url, options) => {
@@ -215,5 +215,20 @@ test('failed autosave and retry cannot create an orphan or duplicate category', 
     assert.deepEqual(store.get(month).state.categories,[]);assert.equal(store.get(month).state.items.find(i=>i.id==='one').categoryId,null);
     ui.control.fail=false;await ui.node('#save').emit('click');await settle();
     const b=store.get(month).state;assert.equal(b.categories.length,1);assert.equal(b.items.find(i=>i.id==='one').categoryId,b.categories[0].id);
+  } finally {store.close();}
+});
+
+test('account icon chooser previews automatic icons and persists explicit choices', async () => {
+  const store=new BudgetStore(':memory:');
+  try {
+    const month=seedCurrentMonth(store),ui=harness(store);await settle();await ui.action('tab','accounts');await ui.action('edit','accounts','shared');
+    const f=ui.node('#edit-form').elements;
+    f.ownerId.value='';f.icon.value='auto';f.icon.emit('change');assert.equal(ui.node('#account-icon-preview').src,'./icons/house.svg');
+    f.ownerId.value='a';f.ownerId.emit('change');assert.equal(ui.node('#account-icon-preview').src,'./icons/user.svg');
+    f.icon.value='wallet';f.icon.emit('change');assert.equal(ui.node('#account-icon-preview').src,'./icons/wallet.svg');
+    f.name.value='Konto med ikon';ui.node('#edit-form').emit('submit');await settle();
+    assert.equal(store.get(month).state.accounts.find(a=>a.id==='shared').icon,'wallet');
+    await ui.action('tab','overview');
+    const html=ui.node('#content').innerHTML;assert.match(html,/details class="panel account-panel"/);assert.match(html,/icons\/wallet.svg/);assert.match(html,/account-heading-total/);
   } finally {store.close();}
 });

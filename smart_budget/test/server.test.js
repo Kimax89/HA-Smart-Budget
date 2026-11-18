@@ -11,7 +11,9 @@ test('HTTP workflow, validation, conflict protection and served browser modules'
   const request = (route, method = 'GET', data, headers = {}) => fetch(base + route, { method,
     headers: { 'Content-Type': 'application/json', 'X-Budget-Request': '1', ...headers }, body: data ? JSON.stringify(data) : undefined });
   try {
-    for (const route of ['/', '/app.js', '/style.css', '/budget.js', '/api/health']) assert.equal((await request(route)).status, 200);
+    for (const route of ['/', '/app.js', '/style.css', '/budget.js', '/api/health', '/icons/house.svg', '/icons/user.svg', '/icons/users.svg', '/icons/wallet.svg', '/icons/piggy-bank.svg', '/icons/landmark.svg', '/icons/credit-card.svg', '/icons/car.svg', '/icons/shopping-cart.svg', '/icons/briefcase.svg']) assert.equal((await request(route)).status, 200);
+    const icon=await request('/icons/house.svg');assert.equal(icon.headers.get('content-type'),'image/svg+xml');assert.match(await icon.text(), /<svg/);
+    assert.equal((await request('/icons/unknown.svg')).status,404);
     let row = await (await request('/api/months/2030-01')).json();
     const initialRevision = row.revision;
     let response = await request('/api/months/2030-01', 'PUT', { state: fixture(), revision: initialRevision });
