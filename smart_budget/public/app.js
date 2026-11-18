@@ -192,7 +192,7 @@ function openEditor(kind, id) {
     html += '<div class="form-row">' + field('Type', select('kind', [['shared', 'Fælles udgift'], ['personal', 'Personlig udgift']], row?.kind ?? 'shared')) + field('Betales fra konto', select('accountId', state.accounts.map(a => [a.id, a.name]), row?.accountId ?? state.accounts[0].id)) + '</div>';
     html += field('Person ved personlig udgift', select('personId', [['', 'Vælg person'], ...state.people.map(p => [p.id, p.name])], row?.personId ?? ''), 'Personlige konti bruger automatisk kontoens ejer. På en fælleskonto vælger du personen.');
     html += '<div class="form-row">' + field('Beløb pr. regning', input('amount', inputMoney(row?.amount ?? 0), 'inputmode="decimal" required')) + field('Betalingsinterval', select('interval', Object.entries(labels), row?.interval ?? 1)) + '</div>';
-    html += '<div class="form-row">' + field('Betalingsdag i måneden', input('paymentDay', row?.paymentDay ?? 1, 'type="number" min="1" max="31" step="1" required'), 'Ved korte måneder bruges månedens sidste dag.') + field('Budgetkategori', select('categoryId', [['', 'Uden kategori'], ...state.categories.map(c => [c.id, c.name])], row?.categoryId ?? ''), 'Opret egne kategorier under Budgetposter → Administrer kategorier.') + '</div>';
+    html += '<div class="form-row">' + field('Betalingsdag i måneden', input('paymentDay', row?.paymentDay ?? 1, 'type="number" min="1" max="31" step="1" required'), 'Ved korte måneder bruges månedens sidste dag.') + field('Budgetkategori', input('categoryName', state.categories.find(c => c.id === row?.categoryId)?.name ?? '', 'type="text" list="budget-categories" maxlength="120" placeholder="Vælg eller skriv en ny kategori" autocomplete="off"') + '<datalist id="budget-categories">' + state.categories.map(c => '<option value="' + esc(c.name) + '"></option>').join('') + '</datalist>', 'Vælg en eksisterende kategori, eller skriv et nyt navn. En ny kategori oprettes sammen med budgetposten. Lad feltet være tomt for ingen kategori.') + '</div>';
     html += field('Hvordan indgår udgiften i budgettet?', select('mode', [['monthly', 'Fordelt pr. måned'], ['due', 'Kun i betalingsmåneden']], row?.mode ?? 'monthly'), 'En årlig regning på 12.000 kr. bliver enten 1.000 kr. pr. måned eller 12.000 kr. i betalingsmåneden.');
     html += field('Første måned / første betalingsmåned', input('startMonth', row?.startMonth ?? month, 'type="month" min="2000-01" max="2199-12" required'), 'Intervallet regnes fra denne måned. Beløbsændringer gemmes i den valgte månedsversion og ændrer ikke tidligere måneder.');
   }
@@ -221,8 +221,16 @@ $('#edit-form').addEventListener('submit', event => {
     let row = { id, name: f.name.value.trim() };
     if (kind === 'people') row = { ...row, income: amount(f.income.value), allocation: f.allocation.value, value: f.allocation.value === 'auto' ? 0 : amount(f.value.value) };
     if (kind === 'accounts') row.ownerId = f.ownerId.value || null;
-    if (kind === 'items') row = { ...row, amount: amount(f.amount.value), kind: f.kind.value, accountId: f.accountId.value, personId: f.kind.value === 'personal' ? f.personId.value : null, interval: Number(f.interval.value), mode: f.mode.value, startMonth: f.startMonth.value, paymentDay: Number(f.paymentDay.value), categoryId: f.categoryId.value || null };
+    if (kind === 'items') row = { ...row, amount: amount(f.amount.value), kind: f.kind.value, accountId: f.accountId.value, personId: f.kind.value === 'personal' ? f.personId.value : null, interval: Number(f.interval.value), mode: f.mode.value, startMonth: f.startMonth.value, paymentDay: Number(f.paymentDay.value), categoryId: null };
     const copy = structuredClone(state); const index = copy[kind].findIndex(r => r.id === id);
+    if (kind === 'items') {
+      const categoryName = f.categoryName.value.trim();
+      if (categoryName) {
+        let category = copy.categories.find(c => c.name.toLocaleLowerCase('da-DK') === categoryName.toLocaleLowerCase('da-DK'));
+        if (!category) { category = { id: crypto.randomUUID(), name: categoryName }; copy.categories.push(category); }
+        row.categoryId = category.id;
+      }
+    }
     if (kind === 'items' && index >= 0) {
       const previous = copy.items[index];
       if (previous.paymentDay !== row.paymentDay || previous.startMonth !== row.startMonth || previous.interval !== row.interval)

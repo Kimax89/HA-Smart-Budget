@@ -71,7 +71,7 @@ Betalingsintervallet afgør den faktiske betalingsmåned, uanset om budgetbeløb
 
 ## Egne budgetkategorier
 
-Åbn **Kategorier** i menuen eller **Budgetposter → Administrer kategorier**. Opret og navngiv kategorierne selv; der oprettes ingen standardkategorier. Vælg derefter en kategori i budgetpostens redigeringsdialog, eller behold **Uden kategori**. Kategorier er uafhængige af både konto og fælles/personlig. Kategorioversigten viser antal poster og månedens samlede budgetbeløb.
+Åbn **Kategorier** i menuen eller **Budgetposter → Administrer kategorier**. Opret og navngiv kategorierne selv; der oprettes ingen standardkategorier. I budgetpostens kategorifelt kan du vælge et eksisterende navn eller skrive et nyt kategorinavn direkte. Et nyt navn oprettes først sammen med budgetposten, når du vælger **Anvend**, og begge gemmes i samme databasehandling. Annullerer du dialogen, oprettes kategorien ikke. Et eksisterende navn genbruges, også hvis store/små bogstaver eller mellemrum omkring navnet er forskellige. Lad feltet være tomt for **Uden kategori**. Kategorier er uafhængige af både konto og fælles/personlig. Kategorioversigten viser antal poster og månedens samlede budgetbeløb.
 
 Du kan omdøbe og fjerne kategorier. Flyt først tilknyttede poster til en anden kategori eller **Uden kategori**, hvis kategorien skal slettes. Kategorier gemmes med månedsversionen og videreføres som udgangspunkt til næste måned. Ændringer påvirker ikke andre gemte måneder.
 
@@ -113,4 +113,4 @@ Home Assistant og Docker bruger samme kode. Ved bygning til Home Assistant bruge
 
 ## Første version
 
-Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.0 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
+Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.1 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.

@@ -37,7 +37,7 @@ function harness(store) {
       });
     }
   };
-  for (const name of ['name', 'income', 'allocation', 'value', 'amount', 'accountId', 'kind', 'personId', 'interval', 'mode', 'startMonth', 'paymentDay', 'categoryId']) node('#edit-form').elements[name] = new Element();
+  for (const name of ['name', 'income', 'allocation', 'value', 'amount', 'accountId', 'kind', 'personId', 'interval', 'mode', 'startMonth', 'paymentDay', 'categoryName']) node('#edit-form').elements[name] = new Element();
   const window = new Element();
   const control = { fail: false, gate: null, puts: 0, month: null };
   const fetch = async (url, options) => {
@@ -157,9 +157,63 @@ test('users can create a category and assign it with a payment day in the item e
     await ui.action('tab','items');await ui.action('edit','items','one');
     assert.match(ui.node('#fields').innerHTML,/name="paymentDay" value="1"/);
     const f=ui.node('#edit-form').elements;
-    for(const [key,value] of Object.entries({name:'Fælles regning A',amount:'3000',kind:'shared',accountId:'a-account',personId:'',interval:'1',mode:'monthly',startMonth:'2000-01',paymentDay:'15',categoryId:category.id})) f[key].value=value;
+    for(const [key,value] of Object.entries({name:'Fælles regning A',amount:'3000',kind:'shared',accountId:'a-account',personId:'',interval:'1',mode:'monthly',startMonth:'2000-01',paymentDay:'15',categoryName:category.name})) f[key].value=value;
     ui.node('#edit-form').emit('submit');await settle();
     const item=store.get(month).state.items.find(i=>i.id==='one');assert.equal(item.paymentDay,15);assert.equal(item.categoryId,category.id);
     assert.match(ui.node('#content').innerHTML,/Min kategori/);
+  } finally {store.close();}
+});
+
+function fillItem(ui, categoryName, extra = {}) {
+  const fields={name:'Ny post',amount:'123,45',kind:'shared',accountId:'shared',personId:'',interval:'1',mode:'monthly',startMonth:'2000-01',paymentDay:'1',categoryName,...extra};
+  for (const [key,value] of Object.entries(fields)) ui.node('#edit-form').elements[key].value=value;
+}
+function seedCurrentMonth(store) {
+  const now=new Date(),month=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const b=fixture();b.items.forEach(i=>i.startMonth='2000-01');store.save(month,b,store.get(month).revision);
+  return month;
+}
+test('a new item and its typed category are persisted together only on apply', async () => {
+  const store=new BudgetStore(':memory:');
+  try {
+    const month=seedCurrentMonth(store),ui=harness(store);await settle();await ui.action('tab','items');await ui.action('add','items');
+    fillItem(ui,'  Ny kategori  ');
+    assert.deepEqual(store.get(month).state.categories,[]);
+    assert.match(ui.node('#fields').innerHTML,/list="budget-categories"/);
+    ui.node('#edit-form').emit('submit');await settle();
+    const b=store.get(month).state;assert.equal(b.categories.length,1);assert.equal(b.categories[0].name,'Ny kategori');
+    assert.equal(b.items.find(i=>i.name==='Ny post').categoryId,b.categories[0].id);
+  } finally {store.close();}
+});
+test('canceling or failing validation never creates the typed category', async () => {
+  const store=new BudgetStore(':memory:');
+  try {
+    const month=seedCurrentMonth(store),ui=harness(store);await settle();await ui.action('tab','items');await ui.action('edit','items','one');
+    fillItem(ui,'Skal ikke oprettes');ui.node('#cancel').emit('click');await settle();
+    assert.deepEqual(store.get(month).state.categories,[]);
+    await ui.action('edit','items','one');fillItem(ui,'Ugyldig post',{paymentDay:'32'});ui.node('#edit-form').emit('submit');await settle();
+    assert.match(ui.node('#form-error').textContent,/Betalingsdag/);assert.deepEqual(store.get(month).state.categories,[]);
+    assert.equal(ui.control.puts,0);
+  } finally {store.close();}
+});
+test('typed existing category names are reused case-insensitively and empty clears the category', async () => {
+  const store=new BudgetStore(':memory:');
+  try {
+    const month=seedCurrentMonth(store);let b=store.get(month);b.state.categories=[{id:'housing',name:'Bolig'}];store.save(month,b.state,b.revision);
+    const ui=harness(store);await settle();await ui.action('tab','items');await ui.action('edit','items','one');
+    fillItem(ui,'  bOLig  ');ui.node('#edit-form').emit('submit');await settle();
+    b=store.get(month);assert.equal(b.state.categories.length,1);assert.equal(b.state.items.find(i=>i.id==='one').categoryId,'housing');
+    await ui.action('edit','items','one');fillItem(ui,'');ui.node('#edit-form').emit('submit');await settle();
+    b=store.get(month);assert.equal(b.state.items.find(i=>i.id==='one').categoryId,null);assert.equal(b.state.categories.length,1);
+  } finally {store.close();}
+});
+test('failed autosave and retry cannot create an orphan or duplicate category', async () => {
+  const store=new BudgetStore(':memory:');
+  try {
+    const month=seedCurrentMonth(store),ui=harness(store);await settle();await ui.action('tab','items');await ui.action('edit','items','one');
+    ui.control.fail=true;fillItem(ui,'Ny ved rettelse');ui.node('#edit-form').emit('submit');await settle();
+    assert.deepEqual(store.get(month).state.categories,[]);assert.equal(store.get(month).state.items.find(i=>i.id==='one').categoryId,null);
+    ui.control.fail=false;await ui.node('#save').emit('click');await settle();
+    const b=store.get(month).state;assert.equal(b.categories.length,1);assert.equal(b.items.find(i=>i.id==='one').categoryId,b.categories[0].id);
   } finally {store.close();}
 });
