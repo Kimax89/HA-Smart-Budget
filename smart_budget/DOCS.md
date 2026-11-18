@@ -20,7 +20,7 @@ SQLite-databasen ligger i appens private `/data/budget.sqlite`. Der kræves inge
 2. Under **Personer** opretter du personer og indtægt efter skat. Vælg automatisk fordeling for alle, hvis puljen skal deles ligeligt.
 3. Under **Konti** opretter du konti. Tilknyt personlige konti til deres ejer. Konti uden ejer behandles som fælleskonti.
 4. Under **Budgetposter** opretter du udgifter. Vælg konto, fælles/personlig, beløb pr. regning, interval, fordelingsform og første måned.
-5. Se beregningen i **Overblik** og vælg **Gem måned**. Indtil du gemmer, er ændringer kun en forhåndsvisning i browseren.
+5. Se beregningen i **Overblik**. Når du vælger **Anvend** i en dialog eller fjerner en post, gemmes ændringen automatisk. Status viser **Gemmer…**, **Gemt** eller **Kunne ikke gemme**. Ved fejl bevares ændringerne i browserfanen; vælg **Prøv at gemme igen**.
 
 Personlige udgifter på en personlig konto skal tilhøre kontoens ejer. På en fælleskonto vælger du selv personen; udgiften lægges til denne persons overførsel og trækkes fra personens rådighedsbeløb efter personlige udgifter.
 
@@ -53,9 +53,9 @@ Alle beløb opbevares i hele øre. Hvis en regning ikke kan deles præcist, ford
 
 En måned uden egen gemt version tager udgangspunkt i den senest gemte tidligere måned. Indtægter, personer, konti og poster videreføres; intervaller beregnes for den valgte måned.
 
-Når du gemmer, opretter eller ændrer du kun den valgte månedsversion. Tidligere måneder ændres ikke. Allerede gemte fremtidige måneder ændres heller ikke. En fremtidig måned uden egen version tager udgangspunkt i den seneste gemte version før den. Opret og gem derfor månederne i rækkefølge for et sammenhængende budget.
+Automatisk lagring opretter eller ændrer kun den valgte månedsversion. Tidligere måneder ændres ikke. Allerede gemte fremtidige måneder ændres heller ikke. En fremtidig måned uden egen version tager udgangspunkt i den seneste gemte version før den. Arbejd derfor med månederne i rækkefølge for et sammenhængende budget.
 
-Ret en posts beløb i den måned, hvor ændringen skal gælde, og gem. Behold første betalingsmåned, hvis betalingsrytmen er den samme. Du kan fjerne personer, konti og poster fra en måned uden at fjerne dem fra tidligere gemte måneder. Flyt eller fjern tilknyttede konti og poster, før du fjerner en person eller konto.
+Ret en posts beløb i den måned, hvor ændringen skal gælde, og vælg **Anvend**. Ændringen gemmes automatisk. Behold første betalingsmåned, hvis betalingsrytmen er den samme. Du kan fjerne personer, konti og poster fra en måned uden at fjerne dem fra tidligere gemte måneder. Flyt eller fjern tilknyttede konti og poster, før du fjerner en person eller konto.
 
 **Afslut måned** gemmer ændringerne, validerer fordelingen og låser månedens tilstand og beregning. **Regnskab** summerer kun afsluttede måneder i det valgte år. Brug månedsvælgeren til at skifte regnskabsår. **Genåbn måned** gør måneden redigerbar og fjerner den fra regnskabet, indtil den afsluttes igen.
 
@@ -87,4 +87,4 @@ Home Assistant og Docker bruger samme kode. Ved bygning til Home Assistant bruge
 
 ## Første version
 
-Ingen data fra referencearket indgår i repositoryet. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.1.0 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
+Ingen data fra referencearket indgår i repositoryet. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.1.1 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.

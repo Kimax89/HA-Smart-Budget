@@ -7,7 +7,7 @@ const inputMoney = value => (value / 100).toFixed(2).replace('.', ',');
 const today = new Date();
 let month = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 let loaded, state, dirty = false, tab = 'overview', ledger, busy = false, errorMessage = '', filter = '';
-let editing, toastTimer;
+let editing, toastTimer, saving = false;
 const labels = { 1: 'Hver måned', 2: 'Hver anden måned', 6: 'Hvert halve år', 12: 'Én gang om året' };
 const monthName = m => new Intl.DateTimeFormat('da-DK', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${m}-01T12:00:00Z`));
 function amount(value) {
@@ -25,8 +25,8 @@ async function api(route, method = 'GET', data) {
 }
 function currentResult() { return loaded.closed ? loaded.result : calculate(state, month); }
 async function load(target) {
-  if (busy) return;
-  if (dirty && !confirm('Du har ændringer, der ikke er gemt. Vil du kassere dem og skifte måned?')) { $('#month').value = month; return; }
+  if (busy) { $('#month').value = month; return; }
+  if (dirty && !(await save())) { $('#month').value = month; return; }
   busy = true; errorMessage = ''; renderStatus();
   try {
     const result = await api(`months/${target}`);
@@ -37,11 +37,12 @@ async function load(target) {
   finally { busy = false; render(); }
 }
 async function save() {
-  if (busy || !dirty || loaded.closed) return;
-  busy = true; errorMessage = ''; renderStatus();
-  try { loaded = await api(`months/${month}`, 'PUT', { state, revision: loaded.revision }); state = structuredClone(loaded.state); dirty = false; toast('Månedens budget er gemt.'); }
-  catch (error) { errorMessage = error.message; }
-  finally { busy = false; render(); }
+  if (busy || loaded?.closed) return false;
+  if (!dirty) return true;
+  busy = true; saving = true; errorMessage = ''; renderStatus();
+  try { loaded = await api(`months/${month}`, 'PUT', { state, revision: loaded.revision }); state = structuredClone(loaded.state); dirty = false; return true; }
+  catch (error) { errorMessage = error.message; return false; }
+  finally { busy = false; saving = false; render(); }
 }
 async function toggleClosed() {
   if (busy) return;
@@ -61,7 +62,7 @@ async function toggleClosed() {
   finally { busy = false; render(); }
 }
 function renderStatus() {
-  $('#status').innerHTML = loaded ? `<div class="status-text"><span class="badge ${loaded.closed ? 'closed' : ''}">${loaded.closed ? '● Afsluttet og låst' : '○ Åben måned'}</span><span>${busy ? 'Arbejder…' : dirty ? 'Ændringer er ikke gemt' : loaded.saved ? 'Gemt månedsversion' : loaded.sourceMonth ? `Udgangspunkt fra ${esc(monthName(loaded.sourceMonth))}` : 'Start med et tomt budget'}</span></div><div class="actions">${!loaded.closed ? `<button id="save" class="primary" ${!dirty || busy ? 'disabled' : ''}>Gem måned</button>` : ''}<button id="close-month" class="secondary" ${busy ? 'disabled' : ''}>${loaded.closed ? 'Genåbn måned' : 'Afslut måned'}</button></div>` : '<span class="muted">Henter budget…</span>';
+  $('#status').innerHTML = loaded ? `<div class="status-text"><span class="badge ${loaded.closed ? 'closed' : ''}">${loaded.closed ? '● Afsluttet og låst' : '○ Åben måned'}</span><span role="status">${saving ? 'Gemmer…' : busy ? 'Arbejder…' : dirty ? (errorMessage ? 'Kunne ikke gemme' : 'Afventer lagring') : loaded.saved ? 'Gemt' : loaded.sourceMonth ? `Automatisk lagring · udgangspunkt fra ${esc(monthName(loaded.sourceMonth))}` : 'Ændringer gemmes automatisk'}</span></div><div class="actions">${!loaded.closed && dirty && errorMessage ? `<button id="save" class="primary" ${!dirty || busy ? 'disabled' : ''}>Prøv at gemme igen</button>` : ''}<button id="close-month" class="secondary" ${busy ? 'disabled' : ''}>${loaded.closed ? 'Genåbn måned' : 'Afslut måned'}</button></div>` : '<span class="muted">Henter budget…</span>';
   $('#save')?.addEventListener('click', save); $('#close-month')?.addEventListener('click', toggleClosed);
   $('#prev').disabled = busy || month === '2000-01'; $('#next').disabled = busy || month === '2199-12'; $('#month').disabled = busy;
 }
@@ -80,7 +81,7 @@ function overview(r) {
   return html;
 }
 function peopleView(r) {
-  return panel('Personer og indtægter', 'Indstillingerne gælder den valgte måned. Gem for at bevare dem.', state.people.length ? table(['Person', 'Indkomst', 'Fordeling', 'Før personlige', 'Handling'], state.people.map((p, n) => `<tr><td>${personLabel(p, n)}</td><td class="num">${kr(p.income)}</td><td class="num">${p.allocation === 'auto' ? 'Automatisk rest' : p.allocation === 'percent' ? `${inputMoney(p.value)} % af puljen` : `${kr(p.value)} fast`}</td><td class="num strong">${kr(r.people[n].before)}</td><td class="num">${rowActions('people', p.id)}</td></tr>`).join('')) + '<div class="hint">Procent er en andel af hele puljen: 10 % og 90 % giver den fordeling direkte. Faste beløb trækkes også fra puljen. En eventuel rest deles ligeligt mellem personer med »Automatisk rest«. Uden automatiske personer skal hele puljen være fordelt.</div>' : empty('Hvem er med i budgettet?', 'Opret hver person og deres månedlige indkomst.'), addButton('people', '+ Tilføj person'));
+  return panel('Personer og indtægter', 'Ændringer gemmes automatisk i den valgte måned.', state.people.length ? table(['Person', 'Indkomst', 'Fordeling', 'Før personlige', 'Handling'], state.people.map((p, n) => `<tr><td>${personLabel(p, n)}</td><td class="num">${kr(p.income)}</td><td class="num">${p.allocation === 'auto' ? 'Automatisk rest' : p.allocation === 'percent' ? `${inputMoney(p.value)} % af puljen` : `${kr(p.value)} fast`}</td><td class="num strong">${kr(r.people[n].before)}</td><td class="num">${rowActions('people', p.id)}</td></tr>`).join('')) + '<div class="hint">Procent er en andel af hele puljen: 10 % og 90 % giver den fordeling direkte. Faste beløb trækkes også fra puljen. En eventuel rest deles ligeligt mellem personer med »Automatisk rest«. Uden automatiske personer skal hele puljen være fordelt.</div>' : empty('Hvem er med i budgettet?', 'Opret hver person og deres månedlige indkomst.'), addButton('people', '+ Tilføj person'));
 }
 function accountsView(r) {
   return panel('Konti', 'En konto uden personlig ejer er en fælleskonto.', state.accounts.length ? table(['Konto', 'Tilknyttet person', 'Fælles udgifter', 'Personlige udgifter', 'Handling'], r.accounts.map(a => `<tr><td><strong>${esc(a.name)}</strong></td><td class="num">${esc(state.people.find(p => p.id === a.ownerId)?.name ?? 'Fælleskonto')}</td><td class="num">${kr(a.shared)}</td><td class="num">${kr(a.personal)}</td><td class="num">${rowActions('accounts', a.id)}</td></tr>`).join('')) + '<div class="hint">Fælles udgifter på en personlig konto modregnes i ejerens overførsel. Hvis I har flere fælleskonti, viser overblikket behovet på hver konto; personernes bidrag vises samlet.</div>' : empty('Hvor betales regningerne?', 'Opret både fælleskonti og personlige konti.'), addButton('accounts', '+ Tilføj konto'));
@@ -98,7 +99,7 @@ function render() {
   renderStatus();
   if (!loaded) { $('#messages').innerHTML = errorMessage ? `<div class="notice error">${esc(errorMessage)} <button id="retry">Prøv igen</button></div>` : ''; $('#retry')?.addEventListener('click', () => load(month)); return; }
   const r = currentResult();
-  $('#messages').innerHTML = (errorMessage ? `<div class="notice error">${esc(errorMessage)}</div>` : '') + r.errors.map(e => `<div class="notice error">${esc(e)}</div>`).join('') + r.warnings.map(e => `<div class="notice">${esc(e)}</div>`).join('') + (dirty ? '<div class="notice info">Forhåndsvisning af dine ændringer. Tryk »Gem måned« for at gemme. Andre gemte måneder ændres ikke.</div>' : '');
+  $('#messages').innerHTML = (errorMessage ? `<div class="notice error">${esc(errorMessage)}</div>` : '') + r.errors.map(e => `<div class="notice error">${esc(e)}</div>`).join('') + r.warnings.map(e => `<div class="notice">${esc(e)}</div>`).join('') + (dirty ? '<div class="notice info">Ændringerne er endnu ikke gemt. De beholdes her, indtil lagringen lykkes. Andre gemte måneder ændres ikke.</div>' : '');
   $('#content').innerHTML = ({ overview, people: peopleView, accounts: accountsView, items: itemsView, ledger: ledgerView }[tab])(r);
   document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => openEditor(b.dataset.add)));
@@ -110,7 +111,7 @@ function render() {
 function removeRow(kind, id) {
   if (loaded.closed || busy) return;
   const copy = structuredClone(state); copy[kind] = copy[kind].filter(r => r.id !== id);
-  try { state = validateBudget(copy); dirty = true; errorMessage = ''; render(); }
+  try { state = validateBudget(copy); dirty = true; errorMessage = ''; render(); void save(); }
   catch (error) { toast(error.message); }
 }
 const field = (label, control, help = '') => `<label class="field">${label}${control}${help ? `<small>${help}</small>` : ''}</label>`;
@@ -164,7 +165,8 @@ $('#edit-form').addEventListener('submit', event => {
     if (kind === 'items') row = { ...row, amount: amount(f.amount.value), kind: f.kind.value, accountId: f.accountId.value, personId: f.kind.value === 'personal' ? f.personId.value : null, interval: Number(f.interval.value), mode: f.mode.value, startMonth: f.startMonth.value };
     const copy = structuredClone(state); const index = copy[kind].findIndex(r => r.id === id);
     if (index < 0) copy[kind].push(row); else copy[kind][index] = row;
-    state = validateBudget(copy); dirty = true; errorMessage = ''; $('#editor').close(); render();
+    if (busy || loaded.closed) throw new Error('Vent, til den igangværende handling er færdig.');
+    state = validateBudget(copy); dirty = true; errorMessage = ''; $('#editor').close(); render(); void save();
   } catch (error) { $('#form-error').textContent = error.message; }
 });
 $('#cancel').addEventListener('click', () => $('#editor').close()); $('#cancel-x').addEventListener('click', () => $('#editor').close());
