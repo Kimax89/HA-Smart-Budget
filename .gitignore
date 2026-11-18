@@ -1,0 +1,8 @@
+data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+node_modules/
+.env
+test-results/
+playwright-report/

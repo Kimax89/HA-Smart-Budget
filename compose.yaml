@@ -1,0 +1,14 @@
+services:
+  smart-budget:
+    build:
+      context: ./smart_budget
+      dockerfile: Dockerfile.standalone
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8099:8099"
+    volumes:
+      - budget-data:/data
+    environment:
+      TZ: Europe/Copenhagen
+volumes:
+  budget-data:

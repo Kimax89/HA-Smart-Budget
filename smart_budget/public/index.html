@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#163c35">
+  <title>Smart Budget</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="./"><span class="brand-icon">◈</span> Smart Budget <span class="brand-tag">HUSHOLDNING</span></a><span class="local-tag">Dine tal. Dit overblik.</span></header>
+  <main>
+    <section class="heading"><div><p class="eyebrow">ET FÆLLES OVERBLIK</p><h1>Plads til hverdagen.</h1><p class="subtitle">Fordel udgifterne. Find balancen. Planlæg næste måned.</p></div><div class="month-control"><button id="prev" class="icon-button" aria-label="Forrige måned">‹</button><label><span class="sr-only">Vælg måned</span><input id="month" type="month" min="2000-01" max="2199-12"></label><button id="next" class="icon-button" aria-label="Næste måned">›</button></div></section>
+    <div id="status" class="status-row"></div>
+    <div id="messages" aria-live="polite"></div>
+    <nav class="tabs" aria-label="Budgetvisninger"><button data-tab="overview" class="active">Overblik</button><button data-tab="items">Budgetposter</button><button data-tab="people">Personer</button><button data-tab="accounts">Konti</button><button data-tab="ledger">Regnskab</button></nav>
+    <section id="content" aria-live="polite"><p>Henter budget…</p></section>
+    <footer><span>Smart Budget · 0.1.0</span><span>Beløb i danske kroner · Personlige udgifter trækkes efter fordeling</span></footer>
+  </main>
+  <dialog id="editor"><form id="edit-form"><div class="dialog-heading"><h2 id="dialog-title"></h2><button type="button" id="cancel-x" class="icon-button" aria-label="Luk">×</button></div><div id="fields"></div><p id="form-error" class="error" role="alert"></p><div class="dialog-actions"><button id="cancel" type="button" class="secondary">Annuller</button><button type="submit" class="primary">Anvend</button></div></form></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>
