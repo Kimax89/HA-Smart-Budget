@@ -24,6 +24,10 @@ SQLite-databasen ligger i appens private `/data/budget.sqlite`. Der kræves inge
 
 Personlige udgifter på en personlig konto skal tilhøre kontoens ejer. På en fælleskonto vælger du selv personen; udgiften lægges til denne persons overførsel og trækkes fra personens rådighedsbeløb efter personlige udgifter.
 
+## Kontooverblik på forsiden
+
+Under **Overblik** vises alle konti med deres tilknyttede poster, opdelt i fælles og personlige udgifter. Hver post viser beløbet i den valgte måned. Ved længere betalingsintervaller vises også beløbet pr. regning og fordelingsformen. Poster uden beløb i den valgte måned vises med 0 kr., så alle poster stadig kan findes på deres konto. Hver gruppe har en delsum, og hver konto har en samlet sum.
+
 ## Fordeling
 
 Puljen er alle indtægter minus alle fælles udgifter, uanset konto.
@@ -87,4 +91,4 @@ Home Assistant og Docker bruger samme kode. Ved bygning til Home Assistant bruge
 
 ## Første version
 
-Ingen data fra referencearket indgår i repositoryet. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.1.1 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
+Ingen data fra referencearket indgår i repositoryet. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.1.2 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.

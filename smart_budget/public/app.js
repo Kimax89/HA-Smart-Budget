@@ -75,10 +75,31 @@ function addButton(kind, label) { return loaded.closed ? '' : `<button class="pr
 function rowActions(kind, id) { return loaded.closed ? '' : `<button class="table-action" data-edit="${kind}" data-id="${id}">Ret</button><button class="table-action danger" data-remove="${kind}" data-id="${id}">Fjern</button>`; }
 function overview(r) {
   let html = `<div class="cards">${card('Samlet indkomst', r.income, `${state.people.length} personer i budgettet`)}${card('Fælles udgifter', r.sharedExpenses, 'På tværs af alle konti')}${card('Rådighedspulje', r.pool, 'Til fordeling før personlige udgifter', true)}</div>`;
-  if (!state.people.length) return html + panel('Velkommen til dit budget', '', empty('Begynd med personerne', 'Tilføj personer og indtægter. Opret derefter konti og budgetposter.<br>Budgettet starter uden eksempeldata.', addButton('people', '+ Tilføj person')));
+  if (!state.people.length) return html + panel('Velkommen til dit budget', '', empty('Begynd med personerne', 'Tilføj personer og indtægter. Opret derefter konti og budgetposter.<br>Budgettet starter uden eksempeldata.', addButton('people', '+ Tilføj person'))) + accountOverview(r);
   html += panel('Sådan fordeles måneden', 'Overførsler tager højde for fælles udgifter betalt fra egne konti.', table(['Person', 'Indkomst', 'Fælles fra egen konto', 'Til fællespuljen', 'Før personlige', 'Efter personlige'], r.people.map((p, n) => `<tr><td>${personLabel(p, n)}</td><td class="num">${kr(p.income)}</td><td class="num">${kr(p.ownShared)}</td><td class="num strong ${p.transfer < 0 ? 'negative' : ''}">${kr(p.transfer)}</td><td class="num">${kr(p.before)}</td><td class="num">${kr(p.after)}</td></tr>`).join('')) + '<div class="hint">Et negativt beløb under »Til fællespuljen« betyder, at personen skal modtage penge. Beløbene er beregninger; programmet udfører ingen bankoverførsler.</div>');
-  html += `<div class="columns">${panel('Kontienes budget', 'Beløb, der skal dækkes på hver konto.', r.accounts.length ? table(['Konto', 'Fælles', 'Personligt', 'I alt'], r.accounts.map(a => `<tr><td>${esc(a.name)}<br><span class="muted small">${esc(state.people.find(p => p.id === a.ownerId)?.name ?? 'Fælleskonto')}</span></td><td class="num">${kr(a.shared)}</td><td class="num">${kr(a.personal)}</td><td class="num strong">${kr(a.shared + a.personal)}</td></tr>`).join('')) : empty('Ingen konti endnu', 'Opret konti, og knyt personlige konti til deres ejer.', addButton('accounts', '+ Tilføj konto')))}${panel('Måneden i korte træk', '', `<div class="hint">${esc(monthName(month))}<br><strong>${state.items.length}</strong> budgetposter<br><strong>${kr(r.sharedAccountNeed)}</strong> skal dækkes på fælleskontiene.<br><br>Alle starter med automatisk, ligelig fordeling. Under Personer kan du vælge en procent af hele puljen eller et fast beløb.</div>`)}</div>`;
+  html += accountOverview(r);
   return html;
+}
+function accountOverview(r) {
+  if (!r.accounts.length) return panel('Konti og budgetposter', '', empty('Ingen konti endnu', 'Opret konti, og knyt personlige konti til deres ejer.', addButton('accounts', '+ Tilføj konto')));
+  const cards = r.accounts.map(account => {
+    const lines = r.lines.filter(line => line.accountId === account.id);
+    const owner = state.people.find(person => person.id === account.ownerId);
+    const groups = [['shared', 'Fælles udgifter'], ['personal', 'Personlige udgifter']].map(([kind, label]) => {
+      const entries = lines.filter(line => line.kind === kind);
+      if (!entries.length) return '';
+      const rows = entries.map(line => {
+        const person = kind === 'personal' ? state.people.find(p => p.id === line.personId) : null;
+        const detail = line.interval === 1 ? labels[1] : labels[line.interval] + ' · ' + kr(line.amount) + ' pr. regning · ' + (line.mode === 'monthly' ? 'fordelt pr. måned' : 'kun betalingsmåned');
+        return '<tr><td><strong>' + esc(line.name) + '</strong>' + (person ? '<br><span class="muted small">' + esc(person.name) + '</span>' : '') + '<br><span class="muted small">' + esc(detail) + '</span></td><td class="num">' + kr(line.monthlyAmount) + '</td></tr>';
+      }).join('');
+      const subtotal = entries.reduce((sum, line) => sum + line.monthlyAmount, 0);
+      return '<h3 class="account-group-title">' + label + '</h3>' + table(['Post', 'Denne måned'], rows + '<tr class="account-subtotal"><td>I alt ' + label.toLowerCase() + '</td><td class="num strong">' + kr(subtotal) + '</td></tr>');
+    }).join('');
+    return panel(esc(account.name), owner ? 'Personlig konto · ' + esc(owner.name) : 'Fælleskonto',
+      (groups || empty('Ingen poster på kontoen', 'Tilføj budgetposter under Budgetposter.')) + '<div class="account-total"><span>Samlet på kontoen</span><strong>' + kr(account.shared + account.personal) + '</strong></div>');
+  }).join('');
+  return '<section aria-label="Konti og budgetposter"><div class="panel-heading account-section-heading"><div><h2>Konti og budgetposter</h2><p>Alle poster på hver konto. Beløbene viser den valgte måneds budget.</p></div></div><div class="account-grid">' + cards + '</div></section>';
 }
 function peopleView(r) {
   return panel('Personer og indtægter', 'Ændringer gemmes automatisk i den valgte måned.', state.people.length ? table(['Person', 'Indkomst', 'Fordeling', 'Før personlige', 'Handling'], state.people.map((p, n) => `<tr><td>${personLabel(p, n)}</td><td class="num">${kr(p.income)}</td><td class="num">${p.allocation === 'auto' ? 'Automatisk rest' : p.allocation === 'percent' ? `${inputMoney(p.value)} % af puljen` : `${kr(p.value)} fast`}</td><td class="num strong">${kr(r.people[n].before)}</td><td class="num">${rowActions('people', p.id)}</td></tr>`).join('')) + '<div class="hint">Procent er en andel af hele puljen: 10 % og 90 % giver den fordeling direkte. Faste beløb trækkes også fra puljen. En eventuel rest deles ligeligt mellem personer med »Automatisk rest«. Uden automatiske personer skal hele puljen være fordelt.</div>' : empty('Hvem er med i budgettet?', 'Opret hver person og deres månedlige indkomst.'), addButton('people', '+ Tilføj person'));
