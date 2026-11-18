@@ -9,6 +9,7 @@ import { accountIcons } from './budget.js';
 const publicDir = fileURLToPath(new URL('../public/', import.meta.url));
 const staticFiles = new Map([['/', ['index.html', 'text/html; charset=utf-8']], ['/app.js', ['app.js', 'text/javascript; charset=utf-8']], ['/style.css', ['style.css', 'text/css; charset=utf-8']]]);
 staticFiles.set('/budget.js', ['../src/budget.js', 'text/javascript; charset=utf-8']);
+staticFiles.set('/logo.svg', ['logo.svg', 'image/svg+xml']);
 for (const icon of accountIcons.filter(icon => icon !== 'auto')) staticFiles.set(`/icons/${icon}.svg`, [`icons/${icon}.svg`, 'image/svg+xml']);
 async function body(req) {
   if (!req.headers['content-type']?.startsWith('application/json')) throw new BudgetError('Brug JSON.', 415);

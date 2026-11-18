@@ -13,6 +13,9 @@ test('HTTP workflow, validation, conflict protection and served browser modules'
   try {
     for (const route of ['/', '/app.js', '/style.css', '/budget.js', '/api/health', '/icons/house.svg', '/icons/user.svg', '/icons/users.svg', '/icons/wallet.svg', '/icons/piggy-bank.svg', '/icons/landmark.svg', '/icons/credit-card.svg', '/icons/car.svg', '/icons/shopping-cart.svg', '/icons/briefcase.svg']) assert.equal((await request(route)).status, 200);
     const icon=await request('/icons/house.svg');assert.equal(icon.headers.get('content-type'),'image/svg+xml');assert.match(await icon.text(), /<svg/);
+    const logo=await request('/logo.svg');assert.equal(logo.status,200);assert.equal(logo.headers.get('content-type'),'image/svg+xml');
+    const logoText=await logo.text();assert.match(logoText,/<svg/);assert.doesNotMatch(logoText,/<(?:image|text)\b/);
+    const page=await (await request('/')).text();assert.match(page,/class="brand-logo" src="\.\/logo.svg"/);assert.match(page,/rel="icon" href="\.\/logo.svg"/);
     assert.equal((await request('/icons/unknown.svg')).status,404);
     let row = await (await request('/api/months/2030-01')).json();
     const initialRevision = row.revision;

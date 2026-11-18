@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="760" viewBox="0 0 680 760" role="img" aria-labelledby="logo-title logo-description">
+  <title id="logo-title">Hus og pung</title>
+  <desc id="logo-description">Blåt hus med fire vinduer i en sort pung med gråt spænde. Transparent baggrund.</desc>
+  <defs>
+    <linearGradient id="roof" x1="350" y1="220" x2="880" y2="610" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#173F80"/>
+      <stop offset="1" stop-color="#123773"/>
+    </linearGradient>
+    <linearGradient id="wall" x1="420" y1="300" x2="840" y2="610" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3673AA"/>
+      <stop offset="1" stop-color="#2D6398"/>
+    </linearGradient>
+    <linearGradient id="lining" x1="360" y1="530" x2="880" y2="650" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#41464D"/>
+      <stop offset="1" stop-color="#35383D"/>
+    </linearGradient>
+    <linearGradient id="wallet" x1="360" y1="610" x2="920" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#14171B"/>
+      <stop offset="1" stop-color="#0F1215"/>
+    </linearGradient>
+    <linearGradient id="clasp" x1="740" y1="650" x2="925" y2="785" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A0A5AE"/>
+      <stop offset="1" stop-color="#9298A2"/>
+    </linearGradient>
+    <path id="wallet-body" d="M 327,577 C 335,601 352,615 376,621 C 398,627 418,624 443,618 L 890,552 C 913,548 930,563 930,587 L 930,823 C 930,872 901,902 852,902 L 405,902 C 355,902 327,872 327,823 Z"/>
+    <clipPath id="wallet-clip"><use href="#wallet-body"/></clipPath>
+  </defs>
+  <g transform="translate(-290 -164)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 327,578 C 327,549 344,531 370,523 L 857,522 C 897,514 930,534 930,572 L 930,628 L 392,661 Z" fill="url(#lining)" stroke="#959BA4" stroke-width="4.5"/>
+    <path d="M 318,440 L 597,193 Q 624,171 651,195 L 759,288 L 759,254 Q 759,228 785,228 L 824,228 Q 851,228 851,255 L 851,373 L 936,447 Q 957,467 940,489 Q 927,505 906,493 L 883,478 L 883,615 L 371,615 L 371,479 L 351,493 Q 332,507 315,492 Q 298,477 309,454 Z" fill="url(#roof)" stroke="#8AAAE6" stroke-width="4.5"/>
+    <path d="M 411,435 L 607,274 Q 625,258 643,275 L 843,459 L 843,612 L 411,612 Z" fill="url(#wall)"/>
+    <g fill="#173E7C">
+      <rect x="554" y="392" width="63" height="60" rx="12"/>
+      <rect x="636" y="392" width="63" height="60" rx="12"/>
+      <rect x="554" y="470" width="63" height="60" rx="12"/>
+      <rect x="636" y="470" width="63" height="60" rx="12"/>
+    </g>
+    <path d="M 327,577 C 338,598 354,606 374,601 L 884,529 Q 914,521 929,550 L 930,587 C 930,563 913,548 890,552 L 443,618 C 418,624 398,627 376,621 C 352,615 335,601 327,577 Z" fill="url(#lining)"/>
+    <use href="#wallet-body" fill="url(#wallet)"/>
+    <g clip-path="url(#wallet-clip)">
+      <path d="M 930,647 L 797,647 C 757,647 727,677 727,715 C 727,754 757,783 797,783 L 930,783 Z" fill="url(#clasp)"/>
+      <circle cx="800" cy="715" r="32" fill="#35383D"/>
+    </g>
+    <path d="M 327,577 L 327,823 C 327,872 355,902 405,902 L 852,902 C 901,902 930,872 930,823 L 930,587 C 930,563 913,548 890,552" fill="none" stroke="#969CA5" stroke-width="4.5"/>
+  </g>
+</svg>
