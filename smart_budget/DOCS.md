@@ -119,4 +119,14 @@ Home Assistant og Docker bruger samme kode. Ved bygning til Home Assistant bruge
 
 ## Første version
 
-Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.4 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
+Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.5 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
+
+## Drift, backup og support
+
+Home Assistant inkluderer appens /data i backups, når appen vælges til backup. Appen stoppes kort under backup (cold backup), så SQLite-filerne kan kopieres konsistent. Opdateringer bevarer /data; afinstallation og sletning af Docker-volumen kan fjerne data. Ved manuel kopi skal appen først stoppes, og hele datamappen skal kopieres. En gendannelse skal afprøves før man stoler på sin backup.
+
+Node-tjenesten kører som en almindelig bruger. Ved første start efter opdatering fra den gamle Home Assistant-container ændres ejerskabet kun på datamappen og programmets SQLite-filer. Budgetindholdet ændres ikke. Et program afviser databaser med en ukendt nyere skemaversion frem for at nedgradere dem.
+
+Fejl rapporteres i [GitHub Issues](https://github.com/Kimax89/HA-Smart-Budget/issues). Undlad personlige budgetdata og tokens i fejlrapporter. Programmet er udgivet under [GPL-3.0](https://github.com/Kimax89/HA-Smart-Budget/blob/main/LICENSE); kontoikonerne har deres egen ISC-licens i public/icons/LICENSE.
+
+Udviklingskontrol: kør npm ci, npm run format:check og npm test i smart_budget. Prettier er kun en udviklingsafhængighed; containeren installerer ingen npm-pakker. Se også [gennemgangen](../docs/REVIEW.md) for afgrænsning og Supervisor-testplan.

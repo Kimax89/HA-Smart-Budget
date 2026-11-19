@@ -26,6 +26,8 @@ docker compose up -d --build
 
 ## Dokumentation og status
 
-Læs [vejledningen](smart_budget/DOCS.md) for beregningsregler, månedshistorik og installation. Version: **0.2.4**. GitHub Actions kontrollerer beregninger, automatisk lagring, SQLite, API, månedsregnskab og containerbygning. Installation på en rigtig Home Assistant-vært skal stadig afprøves.
+Læs [vejledningen](smart_budget/DOCS.md) for beregningsregler, månedshistorik og installation. Version: **0.2.5**. GitHub Actions kontrollerer beregninger, automatisk lagring, SQLite, API, månedsregnskab og containerbygning. Installation på en rigtig Home Assistant-vært skal stadig afprøves.
 
 Home Assistant-konfigurationen følger [App configuration](https://contributors.home-assistant.io/apps/reference/configuration/) og [Ingress](https://contributors.home-assistant.io/apps/guides/ingress/).
+
+Se [Home Assistant- og kodegennemgangen](docs/REVIEW.md) for rettelser, kildehenvisninger og udestående Supervisor-afprøvning.

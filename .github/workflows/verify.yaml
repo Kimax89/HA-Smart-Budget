@@ -14,6 +14,13 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
+      - run: npm ci --ignore-scripts
+        working-directory: smart_budget
+      - run: npm run format:check
+        working-directory: smart_budget
+      - uses: frenck/action-addon-linter@v2
+        with:
+          path: ./smart_budget
       - run: npm test
         working-directory: smart_budget
       - run: node --check smart_budget/public/app.js
@@ -37,23 +44,8 @@ jobs:
         run: docker build -f smart_budget/${{ matrix.dockerfile }} -t budget-check smart_budget
       - name: Check SQLite and budget calculations inside container
         run: docker run --rm budget-check node --input-type=module -e "import {BudgetStore} from './src/store.js'; const s=new BudgetStore(':memory:'); if(s.get('2030-01').state.people.length!==0) process.exit(1); s.close();"
-      - name: Check standalone HTTP and volume persistence
-        if: matrix.dockerfile == 'Dockerfile.standalone'
-        run: |
-          docker volume create budget-ci
-          docker run -d --name budget-ci -p 127.0.0.1:8099:8099 -v budget-ci:/data budget-check
-          for i in $(seq 1 30); do
-            if curl --fail http://127.0.0.1:8099/api/health; then break; fi
-            sleep 1
-          done
-          curl --fail http://127.0.0.1:8099/api/health
-          docker exec budget-ci node --input-type=module -e "import {BudgetStore} from './src/store.js'; const s=new BudgetStore('/data/budget.sqlite'); const m=s.get('2030-01'); s.save('2030-01',{people:[{id:'test',name:'Testperson',income:100,allocation:'auto',value:0}],accounts:[],items:[]},m.revision); s.close();"
-          docker restart budget-ci
-          for i in $(seq 1 30); do
-            if curl --fail http://127.0.0.1:8099/api/health; then break; fi
-            sleep 1
-          done
-          curl --fail http://127.0.0.1:8099/api/months/2030-01 | grep 'Testperson'
+      - name: Check HTTP, Ingress, unprivileged service and data upgrade
+        run: bash scripts/smoke-container.sh '${{ matrix.dockerfile }}'
       - name: Show container logs on failure
         if: failure()
         run: docker logs budget-ci || true
