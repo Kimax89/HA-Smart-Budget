@@ -9,6 +9,7 @@ const publicDir = fileURLToPath(new URL('../public/', import.meta.url));
 const staticFiles = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
+  ['/theme.js', ['theme.js', 'text/javascript; charset=utf-8']],
   ['/style.css', ['style.css', 'text/css; charset=utf-8']],
 ]);
 for (const module of ['budget', 'model', 'validation', 'payments']) {

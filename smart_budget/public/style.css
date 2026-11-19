@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   font-family: Inter, 'Segoe UI', system-ui, sans-serif;
   color: #203d38;
   background: #f4f6f2;
@@ -8,6 +9,113 @@
   --line: #dfe6df;
   --paper: #fff;
   --accent: #dcedbc;
+}
+
+/* Header colors stay identical in both themes. */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.theme-toggle {
+  width: 48px;
+  height: 28px;
+  padding: 3px;
+  border: 1px solid #91bfa0;
+  border-radius: 20px;
+  background: #285047;
+}
+.theme-switch-knob {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 150ms ease;
+}
+.theme-toggle[aria-checked='true'] {
+  background: #a9cd83;
+}
+.theme-toggle[aria-checked='true'] .theme-switch-knob {
+  transform: translateX(20px);
+  background: #163c35;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-switch-knob {
+    transition: none;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  color: #e2ebe5;
+  background: #111b18;
+  --green: #9bd4b5;
+  --muted: #adbbb2;
+  --line: #3a4e44;
+  --paper: #1c2a24;
+  --accent: #bedb9b;
+  --button: #30473a;
+}
+:root[data-theme='dark'] .topbar {
+  color-scheme: light;
+  --green: #1d6552;
+  --line: #dfe6df;
+}
+:root[data-theme='dark']
+  :is(
+    .month-control,
+    .secondary,
+    .table-action,
+    .section-tools input,
+    .section-tools select,
+    dialog,
+    input,
+    select
+  ) {
+  background: var(--paper);
+  border-color: var(--line);
+}
+:root[data-theme='dark'] .primary {
+  background: #9bd4b5;
+  color: #102a1e;
+}
+:root[data-theme='dark'] :is(.card.highlight, .account-total) {
+  background: #2c402f;
+  border-color: #486045;
+}
+:root[data-theme='dark']
+  :is(th, .hint, .account-subtotal td, .account-panel-heading:hover, .account-icon-preview) {
+  background: #22332b;
+}
+:root[data-theme='dark'] td {
+  border-bottom-color: var(--line);
+}
+:root[data-theme='dark'] .account-group-title {
+  background: #273c2e;
+}
+:root[data-theme='dark'] :is(.empty h2, footer) {
+  color: inherit;
+}
+:root[data-theme='dark']
+  :is(.badge, .badge.closed, .notice.info, .payment-badge.upcoming, .payment-badge.paid, .avatar) {
+  background: #2c4738;
+  color: #bee3c7;
+  border-color: #486045;
+}
+:root[data-theme='dark'] :is(.avatar.alt, .notice) {
+  background: #473c27;
+  color: #f0d39d;
+  border-color: #705d36;
+}
+:root[data-theme='dark'] :is(.notice.error, .payment-badge.overdue, .danger, .table-action.danger) {
+  background: #482b29;
+  color: #ffc1b4;
+  border-color: #75473e;
+}
+:root[data-theme='dark'] :is(.error, .negative) {
+  color: #ffc1b4;
 }
 * {
   box-sizing: border-box;
@@ -26,7 +134,7 @@ button {
   border-radius: 9px;
   padding: 10px 15px;
   color: inherit;
-  background: #e9eee8;
+  background: var(--button, #e9eee8);
   font-weight: 600;
 }
 button:hover {
@@ -958,5 +1066,15 @@ main {
   .brand-logo {
     width: 38px;
     height: 42px;
+  }
+}
+
+@media (max-width: 380px) {
+  .topbar {
+    gap: 8px;
+    padding-inline: 8px;
+  }
+  .header-controls {
+    gap: 8px;
   }
 }

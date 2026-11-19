@@ -19,6 +19,7 @@ test('HTTP workflow, validation, conflict protection and served browser modules'
     for (const route of [
       '/',
       '/app.js',
+      '/theme.js',
       '/style.css',
       '/budget.js',
       '/model.js',

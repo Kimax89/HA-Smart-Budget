@@ -119,7 +119,7 @@ Home Assistant og Docker bruger samme kode. Ved bygning til Home Assistant bruge
 
 ## Første version
 
-Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.6 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
+Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.7 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
 
 ## Drift, backup og support
 
@@ -132,3 +132,5 @@ Fejl rapporteres i [GitHub Issues](https://github.com/Kimax89/HA-Smart-Budget/is
 Udviklingskontrol: kør npm ci, npm run format:check og npm test i smart_budget. Prettier er kun en udviklingsafhængighed; containeren installerer ingen npm-pakker. Se også [gennemgangen](../docs/REVIEW.md) for afgrænsning og Supervisor-testplan.
 
 Ved åbning vælges den aktuelle måned. Er den afsluttet, vises den efterfølgende måned i stedet. Du kan stadig vælge afsluttede måneder manuelt.
+
+Dark mode slås til og fra med kontakten til venstre for menuknappen. Headerens farver bevares. Valget gemmes i den aktuelle browser; nye browsere starter i lyst tema.

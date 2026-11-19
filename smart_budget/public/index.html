@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#163c35" />
     <title>Smart Budget</title>
+    <script src="./theme.js"></script>
     <link rel="icon" href="./logo.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./style.css" />
     <script type="module" src="./app.js"></script>
@@ -14,19 +15,33 @@
       <a class="brand" href="./"
         ><img class="brand-logo" src="./logo.svg" alt="" width="45" height="50" /> Smart Budget</a
       >
-      <details id="navigation-menu" class="header-menu">
-        <summary id="navigation-toggle" aria-label="Navigation">
-          <span class="burger-icon" aria-hidden="true"><span></span><span></span><span></span></span
-          ><span class="sr-only">Menu</span>
-        </summary>
-        <nav class="header-nav" aria-label="Budgetvisninger">
-          <button data-tab="overview" class="active">Overblik</button
-          ><button data-tab="items">Budgetposter</button><button data-tab="people">Personer</button
-          ><button data-tab="accounts">Konti</button
-          ><button data-tab="categories">Kategorier</button
-          ><button data-tab="ledger">Regnskab</button>
-        </nav>
-      </details>
+      <div class="header-controls">
+        <button
+          id="theme-toggle"
+          class="theme-toggle"
+          type="button"
+          role="switch"
+          aria-checked="false"
+          aria-label="Dark mode"
+          title="Dark mode"
+        >
+          <span class="theme-switch-knob" aria-hidden="true"></span>
+        </button>
+        <details id="navigation-menu" class="header-menu">
+          <summary id="navigation-toggle" aria-label="Navigation">
+            <span class="burger-icon" aria-hidden="true"
+              ><span></span><span></span><span></span></span
+            ><span class="sr-only">Menu</span>
+          </summary>
+          <nav class="header-nav" aria-label="Budgetvisninger">
+            <button data-tab="overview" class="active">Overblik</button
+            ><button data-tab="items">Budgetposter</button
+            ><button data-tab="people">Personer</button><button data-tab="accounts">Konti</button
+            ><button data-tab="categories">Kategorier</button
+            ><button data-tab="ledger">Regnskab</button>
+          </nav>
+        </details>
+      </div>
     </header>
     <main>
       <section id="summary" class="summary" aria-label="Månedens nøgletal" hidden></section>
@@ -46,7 +61,7 @@
       <div id="messages" aria-live="polite"></div>
       <section id="content" aria-live="polite"><p>Henter budget…</p></section>
       <footer>
-        <span>Smart Budget · 0.2.6</span
+        <span>Smart Budget · 0.2.7</span
         ><span>Beløb i danske kroner · Personlige udgifter trækkes efter fordeling</span>
       </footer>
     </main>

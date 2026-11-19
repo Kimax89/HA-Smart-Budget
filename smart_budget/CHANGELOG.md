@@ -1,5 +1,9 @@
 # Ændringslog
 
+## 0.2.7 — 2026-11-19
+
+- Dark mode med en tilgængelig toggle til venstre for menuen. Valget gemmes lokalt i browseren. Headerens farver bevares.
+
 ## 0.2.6 — 2026-11-19
 
 - Ved åbning vises næste måned, hvis den aktuelle måned er afsluttet. Manuel månedsnavigation er uændret.
