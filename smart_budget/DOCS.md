@@ -105,7 +105,7 @@ docker compose up -d --build
 
 ## Lokal udvikling
 
-Kræver Node.js 24 LTS. Ingen npm-pakker eller build-trin er nødvendige.
+Kræver Node.js 24 LTS. Selve programmet kræver ingen npm-pakker eller build-trin. npm ci installerer kun udviklingsværktøjet til formattering.
 
 ```sh
 cd smart_budget

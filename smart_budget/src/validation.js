@@ -13,8 +13,8 @@ export function validMonth(value) {
 const fail = (message) => {
   throw new BudgetError(message);
 };
-const money = (n, label, negative = false) => {
-  if (!Number.isSafeInteger(n) || n > 100_000_000_000 || n < (negative ? -100_000_000_000 : 0))
+const money = (n, label) => {
+  if (!Number.isSafeInteger(n) || n > 100_000_000_000 || n < 0)
     fail(`${label} skal være et gyldigt beløb i hele øre.`);
   return n;
 };

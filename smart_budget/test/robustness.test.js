@@ -1,12 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { validateBudget, BudgetError } from '../src/budget.js';
 import { BudgetStore } from '../src/store.js';
 import { fixture } from './fixtures.js';
+
+test('Home Assistant, package and displayed release versions agree', () => {
+  const read = (file) => readFileSync(new URL(file, import.meta.url), 'utf8');
+  const version = JSON.parse(read('../package.json')).version;
+  assert.equal(/^version: ['"]?([^'"\s]+)/m.exec(read('../config.yaml'))?.[1], version);
+  assert.ok(read('../public/index.html').includes(`Smart Budget · ${version}`));
+  assert.ok(read('../CHANGELOG.md').includes(`## ${version}`));
+});
 
 test('malformed collection entries produce validation errors instead of server failures', () => {
   for (const collection of ['people', 'accounts', 'items', 'categories']) {

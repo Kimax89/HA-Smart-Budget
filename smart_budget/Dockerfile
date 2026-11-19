@@ -6,8 +6,7 @@ ENV NODE_ENV=production HOST=0.0.0.0 PORT=8099 DATA_DIR=/data INGRESS_ONLY=true
 COPY package.json ./
 COPY src ./src
 COPY public ./public
-COPY container-entrypoint.sh /usr/local/bin/budget-entrypoint
-RUN chmod 755 /usr/local/bin/budget-entrypoint
+COPY --chmod=755 container-entrypoint.sh /usr/local/bin/budget-entrypoint
 ENTRYPOINT ["budget-entrypoint"]
 EXPOSE 8099
 CMD ["node", "src/server.js"]
