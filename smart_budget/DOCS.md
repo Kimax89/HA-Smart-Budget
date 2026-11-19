@@ -10,7 +10,7 @@ Kræver Home Assistant med Supervisor og understøttelse af Apps, normalt Home A
 4. Find **Smart Budget**, installer og start appen. Første installation bygger containeren lokalt og kan tage flere minutter.
 5. Vælg **Åbn webbrugerflade**, og slå eventuelt visning i sidepanelet til.
 
-Appen bruger Ingress på intern port 8099, accepterer kun Supervisorens proxy og åbner ingen port på værten. Home Assistant står for login. I denne første version er sidepanelet begrænset til administratorer. Budgetpersoner er beregningspersoner, ikke separate brugerkonti.
+Appen bruger Ingress på intern port 8099, accepterer kun Supervisorens proxy og åbner ingen port på værten. Home Assistant står for login. Ingress-panelet er tilgængeligt for alle brugere, der er logget ind i Home Assistant. Alle har adgang til det samme budget og kan rette i åbne måneder. Budgetpersoner er beregningspersoner, ikke separate brugerkonti.
 
 SQLite-databasen ligger i appens private `/data/budget.sqlite`. Der kræves ingen cloudtjeneste eller bankforbindelse.
 
@@ -119,7 +119,7 @@ Home Assistant og Docker bruger samme kode. Ved bygning til Home Assistant bruge
 
 ## Første version
 
-Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.7 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
+Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.8 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
 
 ## Drift, backup og support
 

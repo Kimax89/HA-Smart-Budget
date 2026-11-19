@@ -1,5 +1,9 @@
 # Ændringslog
 
+## 0.2.8 — 2026-11-19
+
+- Ingress-panelet er tilgængeligt for alle indloggede Home Assistant-brugere med panel_admin: false.
+
 ## 0.2.7 — 2026-11-19
 
 - Dark mode med en tilgængelig toggle til venstre for menuen. Valget gemmes lokalt i browseren. Headerens farver bevares.
