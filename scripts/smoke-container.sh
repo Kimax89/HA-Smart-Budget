@@ -41,7 +41,7 @@ for module in app budget model validation payments; do request "$module.js" >/de
 # The init process can be root; the application process must not be.
 docker top "$container" -eo uid,comm | awk '$2 == "node" { found=1; if ($1 == 0) exit 1 } END { if (!found) exit 1 }'
 if [[ "$variant" == Dockerfile ]]; then
-    docker run --rm --network budget-ci --entrypoint node budget-check -e "fetch('http://budget-ci:8099/').then(r=>process.exit(r.status===403?0:1))"
+    docker run --rm --network budget-ci --ip 172.30.32.4 --entrypoint node budget-check -e "fetch('http://budget-ci:8099/').then(r=>process.exit(r.status===403?0:1))"
 fi
 docker restart "$container"
 wait_for_server
