@@ -1,5 +1,9 @@
 # Ændringslog
 
+## 0.2.6 — 2026-11-19
+
+- Ved åbning vises næste måned, hvis den aktuelle måned er afsluttet. Manuel månedsnavigation er uændret.
+
 ## 0.2.5 — 2026-11-19
 
 - Rettet Home Assistant-init: Dockers init anvendes, da appen ikke bruger S6.

@@ -12,7 +12,7 @@ import { fixture } from './fixtures.js';
 const settle = async () => {
   for (let i = 0; i < 5; i++) await new Promise((resolve) => setImmediate(resolve));
 };
-function harness(store) {
+function harness(store, now) {
   const nodes = new Map();
   class Element {
     constructor() {
@@ -111,6 +111,13 @@ function harness(store) {
     }
   };
   const context = vm.createContext({
+    Date: now
+      ? class extends Date {
+          constructor(...args) {
+            super(...(args.length ? args : [now]));
+          }
+        }
+      : Date,
     document,
     window,
     calculate,
@@ -140,6 +147,30 @@ function harness(store) {
     },
   };
 }
+test('startup shows next month only when current month is closed, including year rollover', async () => {
+  const store = new BudgetStore(':memory:');
+  try {
+    const open = harness(store, '2030-12-15T12:00:00Z');
+    await settle();
+    assert.equal(open.node('#month').value, '2030-12');
+    let current = store.get('2030-12');
+    current = store.save('2030-12', fixture(), current.revision);
+    store.setClosed('2030-12', true, current.revision);
+    const next = store.get('2031-01');
+    store.setClosed('2031-01', true, next.revision);
+    const ui = harness(store, '2030-12-15T12:00:00Z');
+    await settle();
+    assert.equal(ui.node('#month').value, '2031-01');
+    assert.equal(store.get('2031-02').saved, false);
+    ui.node('#month').value = '2030-12';
+    await ui.node('#month').emit('change');
+    assert.equal(ui.node('#month').value, '2030-12');
+    assert.equal(ui.control.puts, 0);
+  } finally {
+    store.close();
+  }
+});
+
 test('app automatically persists applied edits and removals, with saving and saved status', async () => {
   const store = new BudgetStore(':memory:');
   try {

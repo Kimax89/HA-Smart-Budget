@@ -84,7 +84,7 @@ async function api(route, method = 'GET', data) {
 function currentResult() {
   return loaded.closed ? loaded.result : calculate(state, month);
 }
-async function load(target) {
+async function load(target, { useDefaultMonth = false } = {}) {
   if (busy) {
     $('#month').value = month;
     return;
@@ -97,7 +97,13 @@ async function load(target) {
   errorMessage = '';
   renderStatus();
   try {
-    const result = await api(`months/${target}`);
+    let result = await api(`months/${target}`);
+    if (useDefaultMonth && result.closed && target !== '2199-12') {
+      const next = new Date(`${target}-01T12:00:00Z`);
+      next.setUTCMonth(next.getUTCMonth() + 1);
+      target = next.toISOString().slice(0, 7);
+      result = await api(`months/${target}`);
+    }
     month = target;
     loaded = result;
     state = structuredClone(result.state);
@@ -926,4 +932,4 @@ window.addEventListener('beforeunload', (event) => {
   }
 });
 $('#month').value = month;
-load(month);
+load(month, { useDefaultMonth: true });
