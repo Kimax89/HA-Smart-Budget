@@ -119,7 +119,7 @@ Home Assistant og Docker bruger samme kode. Ved bygning til Home Assistant bruge
 
 ## Første version
 
-Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.8 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
+Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.9 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
 
 ## Drift, backup og support
 

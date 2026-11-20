@@ -1,5 +1,11 @@
 # Ændringslog
 
+## 0.2.9 — 2026-11-21
+
+- Byttet kolonnerne Til fællespuljen og Fælles fra egen konto på Overblikket.
+- Overførsler vises med fed blå tekst, indtægter med fed grøn tekst. Blåtonen tilpasses dark mode for læsbarhed.
+- Personer og budgetposter vises alfabetisk med dansk sortering. Rækkefølgen i budgetdata og fordelingen af øre ændres ikke.
+
 ## 0.2.8 — 2026-11-19
 
 - Ingress-panelet er tilgængeligt for alle indloggede Home Assistant-brugere med panel_admin: false.

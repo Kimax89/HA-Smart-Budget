@@ -9,6 +9,7 @@
   --line: #dfe6df;
   --paper: #fff;
   --accent: #dcedbc;
+  --transfer-text: #153e75;
 }
 
 /* Header colors stay identical in both themes. */
@@ -56,6 +57,7 @@
   --line: #3a4e44;
   --paper: #1c2a24;
   --accent: #bedb9b;
+  --transfer-text: #8dbbff;
   --button: #30473a;
 }
 :root[data-theme='dark'] .topbar {
@@ -356,6 +358,14 @@ tr:last-child td {
 .strong {
   font-weight: 700;
   color: var(--green);
+}
+.income-amount {
+  font-weight: 700;
+  color: var(--green);
+}
+.transfer-amount {
+  font-weight: 700;
+  color: var(--transfer-text);
 }
 .person {
   display: flex;

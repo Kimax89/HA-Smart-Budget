@@ -6,6 +6,8 @@ const esc = (value) =>
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
   );
 const currency = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
+const nameOrder = new Intl.Collator('da-DK', { sensitivity: 'base' });
+const byName = (rows) => rows.toSorted((a, b) => nameOrder.compare(a.name, b.name));
 const kr = (value) => currency.format(value / 100);
 const inputMoney = (value) => (value / 100).toFixed(2).replace('.', ',');
 const today = new Date();
@@ -249,15 +251,15 @@ function overview(r) {
       [
         'Person',
         'Indkomst',
-        'Fælles fra egen konto',
         'Til fællespuljen',
+        'Fælles fra egen konto',
         'Før personlige',
         'Efter personlige',
       ],
-      r.people
+      byName(r.people)
         .map(
           (p, n) =>
-            `<tr><td>${personLabel(p, n)}</td><td class="num">${kr(p.income)}</td><td class="num">${kr(p.ownShared)}</td><td class="num strong ${p.transfer < 0 ? 'negative' : ''}">${kr(p.transfer)}</td><td class="num">${kr(p.before)}</td><td class="num">${kr(p.after)}</td></tr>`,
+            `<tr><td>${personLabel(p, n)}</td><td class="num income-amount">${kr(p.income)}</td><td class="num transfer-amount">${kr(p.transfer)}</td><td class="num">${kr(p.ownShared)}</td><td class="num">${kr(p.before)}</td><td class="num">${kr(p.after)}</td></tr>`,
         )
         .join(''),
     ) +
@@ -287,7 +289,7 @@ function accountOverview(r) {
         .map(([kind, label]) => {
           const entries = lines.filter((line) => line.kind === kind);
           if (!entries.length) return '';
-          const rows = entries
+          const rows = byName(entries)
             .map((line) => {
               const person =
                 kind === 'personal' ? state.people.find((p) => p.id === line.personId) : null;
@@ -364,10 +366,10 @@ function peopleView(r) {
     state.people.length
       ? table(
           ['Person', 'Indkomst', 'Fordeling', 'Før personlige', 'Handling'],
-          state.people
+          byName(state.people)
             .map(
               (p, n) =>
-                `<tr><td>${personLabel(p, n)}</td><td class="num">${kr(p.income)}</td><td class="num">${p.allocation === 'auto' ? 'Automatisk rest' : p.allocation === 'percent' ? `${inputMoney(p.value)} % af puljen` : `${kr(p.value)} fast`}</td><td class="num strong">${kr(r.people[n].before)}</td><td class="num">${rowActions('people', p.id)}</td></tr>`,
+                `<tr><td>${personLabel(p, n)}</td><td class="num income-amount">${kr(p.income)}</td><td class="num">${p.allocation === 'auto' ? 'Automatisk rest' : p.allocation === 'percent' ? `${inputMoney(p.value)} % af puljen` : `${kr(p.value)} fast`}</td><td class="num strong">${kr(r.people.find((person) => person.id === p.id).before)}</td><td class="num">${rowActions('people', p.id)}</td></tr>`,
             )
             .join(''),
         ) +
@@ -416,7 +418,7 @@ function paymentAction(line) {
   );
 }
 function itemsView(r) {
-  const rows = r.lines.filter((i) =>
+  const rows = byName(r.lines).filter((i) =>
     (
       i.name +
       ' ' +
