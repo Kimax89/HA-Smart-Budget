@@ -24,7 +24,12 @@ let loaded,
 let editing,
   toastTimer,
   saving = false;
-const collapsedAccounts = new Set();
+const accountPanelStates = new Map();
+let accountLayout = 'multiple';
+let accountResizeObserver;
+const accountPanelKey = (id) => `${month}:${id}:${accountLayout}`;
+const accountPanelOpen = (id) =>
+  accountPanelStates.get(accountPanelKey(id)) ?? accountLayout !== 'single';
 const iconChoices = [
   ['auto', 'Automatisk (hus/person)'],
   ['house', 'Hus'],
@@ -347,12 +352,11 @@ function accountOverview(r) {
           );
         })
         .join('');
-      const key = month + ':' + account.id;
       return (
         '<details class="panel account-panel" data-account-panel="' +
         account.id +
         '" ' +
-        (collapsedAccounts.has(key) ? '' : 'open') +
+        (accountPanelOpen(account.id) ? 'open' : '') +
         '><summary class="account-panel-heading"><span class="account-identity">' +
         accountIcon(account) +
         '<span><span class="account-title">' +
@@ -624,14 +628,7 @@ function render() {
   document
     .querySelectorAll('[data-payment]')
     .forEach((b) => b.addEventListener('click', () => togglePayment(b.dataset.payment)));
-  document.querySelectorAll('[data-account-panel]').forEach((details) => {
-    const key = month + ':' + details.dataset.accountPanel;
-    details.addEventListener('toggle', () => {
-      if (!details.isConnected) return;
-      if (details.open) collapsedAccounts.delete(key);
-      else collapsedAccounts.add(key);
-    });
-  });
+  bindAccountPanels();
   $('#manage-categories')?.addEventListener('click', () => {
     tab = 'categories';
     render();
@@ -644,6 +641,30 @@ function render() {
     $('#filter').setSelectionRange(start, start);
   });
 }
+function bindAccountPanels() {
+  accountResizeObserver?.disconnect();
+  const grid = document.querySelector('.account-grid');
+  if (!grid?.getBoundingClientRect || typeof ResizeObserver === 'undefined') return;
+  const panels = [...grid.querySelectorAll('[data-account-panel]')];
+  const syncLayout = () => {
+    if (!grid.isConnected) return;
+    const style = getComputedStyle(grid);
+    const minimum = parseFloat(style.getPropertyValue('--account-min-width'));
+    const gap = parseFloat(style.columnGap);
+    accountLayout = grid.getBoundingClientRect().width < 2 * minimum + gap ? 'single' : 'multiple';
+    for (const panel of panels) panel.open = accountPanelOpen(panel.dataset.accountPanel);
+  };
+  syncLayout();
+  for (const panel of panels) {
+    panel.addEventListener('toggle', () => {
+      if (!panel.isConnected || panel.open === accountPanelOpen(panel.dataset.accountPanel)) return;
+      accountPanelStates.set(accountPanelKey(panel.dataset.accountPanel), panel.open);
+    });
+  }
+  accountResizeObserver = new ResizeObserver(syncLayout);
+  accountResizeObserver.observe(grid);
+}
+
 function removeRow(kind, id) {
   if (!canEdit || loaded.closed || busy) return;
   const copy = structuredClone(state);

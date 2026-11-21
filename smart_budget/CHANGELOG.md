@@ -1,5 +1,10 @@
 # Ændringslog
 
+## 0.2.12 — 2026-11-21
+
+- Konti og budgetposter er som standard klappet sammen, når kontooversigtens bredde kun tillader én konto pr. række. På bredere layout er de fortsat åbne som standard.
+- Manuel åbning/lukning huskes særskilt for smalt og bredt layout i den valgte måned, indtil siden genindlæses. Tilpasser sig også ændringer i vinduets bredde.
+
 ## 0.2.11 — 2026-11-21
 
 - Tilføjet til/fra-kontakten admins_edit i Home Assistants App-konfiguration (standard false). Administratorer kan redigere; øvrige identificerede brugere kan kun se Overblikket og skifte måned.

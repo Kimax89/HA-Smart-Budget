@@ -652,9 +652,11 @@ input[type='month'] {
 }
 
 .account-grid {
+  --account-min-width: 320px;
+  --account-gap: 20px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--account-min-width)), 1fr));
+  gap: var(--account-gap);
   align-items: start;
 }
 .account-grid .panel {
