@@ -646,12 +646,16 @@ function bindAccountPanels() {
   const grid = document.querySelector('.account-grid');
   if (!grid?.getBoundingClientRect || typeof ResizeObserver === 'undefined') return;
   const panels = [...grid.querySelectorAll('[data-account-panel]')];
+  let observedWidth;
   const syncLayout = () => {
     if (!grid.isConnected) return;
+    const width = grid.getBoundingClientRect().width;
+    if (width === observedWidth) return;
+    observedWidth = width;
     const style = getComputedStyle(grid);
     const minimum = parseFloat(style.getPropertyValue('--account-min-width'));
     const gap = parseFloat(style.columnGap);
-    accountLayout = grid.getBoundingClientRect().width < 2 * minimum + gap ? 'single' : 'multiple';
+    accountLayout = width < 2 * minimum + gap ? 'single' : 'multiple';
     for (const panel of panels) panel.open = accountPanelOpen(panel.dataset.accountPanel);
   };
   syncLayout();
@@ -661,7 +665,9 @@ function bindAccountPanels() {
       accountPanelStates.set(accountPanelKey(panel.dataset.accountPanel), panel.open);
     });
   }
-  accountResizeObserver = new ResizeObserver(syncLayout);
+  accountResizeObserver = new ResizeObserver(() => {
+    if (grid.getBoundingClientRect().width !== observedWidth) requestAnimationFrame(syncLayout);
+  });
   accountResizeObserver.observe(grid);
 }
 
