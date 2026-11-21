@@ -2,6 +2,11 @@
 set -eu
 umask 077
 
+if [ "${INGRESS_ONLY:-false}" = true ]; then
+    INGRESS_ACCESS="$(node /app/src/ingress-access.js "$DATA_DIR/options.json")"
+    export INGRESS_ACCESS
+fi
+
 # Supervisor preserves /data across upgrades. Migrate only our database files,
 # including volumes created by the older root-running Home Assistant image.
 mkdir -p "$DATA_DIR"

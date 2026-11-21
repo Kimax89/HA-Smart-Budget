@@ -1,0 +1,4 @@
+configuration:
+  ingress_access:
+    name: Adgang til Smart Budget
+    description: 'all = alle brugere, admins = kun administratorer. Gem og genstart appen. Menupunktet kan fortsat ses af alle, men adgangskontrollen gælder hele appen og dens API. Administratorvalg kræver en Supervisor, som sender brugergrupper; manglende grupper afvises.'

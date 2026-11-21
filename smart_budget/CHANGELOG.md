@@ -1,5 +1,12 @@
 # Ændringslog
 
+## 0.2.10 — 2026-11-21
+
+- Ny Home Assistant-indstilling ingress_access: all (standard) eller admins. Gem og genstart for at ændre adgangen.
+- panel_admin: false bevares, så sidepanelet kan vises for alle. Administratorbegrænsning håndhæves på alle appens sider og API-ruter, men skjuler ikke sidepanelet.
+- Brugergrupper fra den verificerede Supervisor-proxy bruges uden ekstra API-rettigheder. Manglende grupper afvises i administratortilstand.
+- Tilføjet adgangstests og containertest med root-ejet options.json samt forsøg på uautoriseret læsning og ændring.
+
 ## 0.2.9 — 2026-11-21
 
 - Byttet kolonnerne Til fællespuljen og Fælles fra egen konto på Overblikket.

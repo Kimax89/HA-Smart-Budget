@@ -10,13 +10,21 @@ Kræver Home Assistant med Supervisor og understøttelse af Apps, normalt Home A
 4. Find **Smart Budget**, installer og start appen. Første installation bygger containeren lokalt og kan tage flere minutter.
 5. Vælg **Åbn webbrugerflade**, og slå eventuelt visning i sidepanelet til.
 
-Appen bruger Ingress på intern port 8099, accepterer kun Supervisorens proxy og åbner ingen port på værten. Home Assistant står for login. Ingress-panelet er tilgængeligt for alle brugere, der er logget ind i Home Assistant. Alle har adgang til det samme budget og kan rette i åbne måneder. Budgetpersoner er beregningspersoner, ikke separate brugerkonti.
+Appen bruger Ingress på intern port 8099, accepterer kun Supervisorens proxy og åbner ingen port på værten. Home Assistant står for login. Ingress-panelet er tilgængeligt for alle brugere, der er logget ind i Home Assistant. Som standard har alle adgang til det samme budget og kan rette i åbne måneder. Adgangen kan begrænses i appens konfiguration som beskrevet nedenfor. Budgetpersoner er beregningspersoner, ikke separate brugerkonti.
 
 SQLite-databasen ligger i appens private `/data/budget.sqlite`. Der kræves ingen cloudtjeneste eller bankforbindelse.
 
 Navigationen til Overblik, Budgetposter, Personer, Konti og Regnskab findes i burgermenuen øverst til højre. Menuen kan betjenes med tastatur og lukkes med Escape eller ved klik udenfor.
 
-## Første budget
+## Adgang for Home Assistant-brugere
+
+Under **Indstillinger → Apps → Smart Budget → Konfiguration** kan **Adgang til Smart Budget** sættes til `all` (alle indloggede brugere, standard) eller `admins` (kun administratorer). Gem og genstart appen. Begrænsningen gælder både sider og API; menupunktet kan fortsat være synligt for alle.
+
+Administratorvalget kræver Supervisor med understøttelse af brugergrupper, verificeret i Supervisor 2026.11.0. Hvis grupper mangler, afvises adgangen. Opdater da Supervisor, eller vælg `all` og genstart. Home Assistants App-konfiguration kan tilgås af administratoren, selv om Smart Budgets Ingress afviser adgang. Standalone Docker påvirkes ikke af indstillingen.
+
+Se [undersøgelsen af Ingress](../docs/INGRESS.md) for kilder, forskellen på sidepanel og adgang samt kontrol med en almindelig bruger. Slå **Vis i sidepanelet** til på appens infoside, hvis Smart Budget ikke vises.
+
+## Opret budgettet
 
 1. Vælg den måned, budgettet begynder i.
 2. Under **Personer** opretter du personer og indtægt efter skat. Vælg automatisk fordeling for alle, hvis puljen skal deles ligeligt.
@@ -119,7 +127,7 @@ Home Assistant og Docker bruger samme kode. Ved bygning til Home Assistant bruge
 
 ## Første version
 
-Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.9 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
+Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.10 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
 
 ## Drift, backup og support
 

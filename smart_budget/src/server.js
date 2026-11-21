@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { BudgetStore } from './store.js';
 import { BudgetError, accountIcons } from './budget.js';
+import { checkIngressAccess, validateIngressAccess } from './ingress-access.js';
 
 const publicDir = fileURLToPath(new URL('../public/', import.meta.url));
 const staticFiles = new Map([
@@ -34,7 +35,8 @@ async function body(req) {
     throw new BudgetError('Ugyldig JSON.');
   }
 }
-export function createServer(store, { ingressOnly = false } = {}) {
+export function createServer(store, { ingressOnly = false, ingressAccess = 'all' } = {}) {
+  validateIngressAccess(ingressAccess);
   return http.createServer(async (req, res) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'same-origin');
@@ -48,9 +50,7 @@ export function createServer(store, { ingressOnly = false } = {}) {
       res.end(JSON.stringify(value));
     };
     try {
-      const ip = req.socket.remoteAddress?.replace(/^::ffff:/, '');
-      if (ingressOnly && ip !== '172.30.32.2')
-        throw new BudgetError('Kun adgang gennem Home Assistant Ingress.', 403);
+      checkIngressAccess(req, ingressOnly, ingressAccess);
       const url = new URL(req.url, 'http://localhost');
       if (req.method === 'GET' && url.pathname === '/api/health')
         return json(200, { status: 'ok' });
@@ -105,7 +105,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const dataDir = process.env.DATA_DIR ?? './data';
   await mkdir(dataDir, { recursive: true });
   const store = new BudgetStore(path.join(dataDir, 'budget.sqlite'));
-  const server = createServer(store, { ingressOnly: process.env.INGRESS_ONLY === 'true' });
+  const server = createServer(store, {
+    ingressOnly: process.env.INGRESS_ONLY === 'true',
+    ingressAccess: process.env.INGRESS_ACCESS ?? 'all',
+  });
   server.listen(Number(process.env.PORT ?? 8099), process.env.HOST ?? '127.0.0.1', () =>
     console.log('HA Smart Budget ready'),
   );

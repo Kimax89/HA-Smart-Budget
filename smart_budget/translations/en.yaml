@@ -1,0 +1,4 @@
+configuration:
+  ingress_access:
+    name: Smart Budget access
+    description: 'all = all users, admins = administrators only. Save and restart the app. The sidebar entry may remain visible to everyone, but access is enforced for the entire app and API. Administrator mode requires a Supervisor that forwards user groups; missing groups are denied.'

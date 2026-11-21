@@ -1,5 +1,5 @@
 name: Smart Budget
-version: '0.2.9'
+version: '0.2.10'
 slug: smart_budget
 description: Husholdningsbudget med fælles udgifter, individuel fordeling og månedsregnskab.
 url: https://github.com/Kimax89/HA-Smart-Budget
@@ -12,3 +12,7 @@ ingress: true
 panel_icon: mdi:wallet-outline
 panel_title: Smart Budget
 panel_admin: false
+options:
+  ingress_access: all
+schema:
+  ingress_access: list(all|admins)

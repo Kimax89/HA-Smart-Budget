@@ -37,6 +37,14 @@ wait_for_server() {
 }
 wait_for_server
 request api/months/2030-01 | grep Testperson
+if [[ "$variant" == Dockerfile ]]; then
+    docker exec "$container" node --input-type=module -e "import {writeFileSync,chmodSync} from 'node:fs'; writeFileSync('/data/options.json', JSON.stringify({ingress_access:'admins'})); chmodSync('/data/options.json', 0o600);"
+    docker restart "$container"
+    docker run --rm -i --network budget-ci --ip 172.30.32.2 --entrypoint node budget-check --input-type=module < scripts/check-ingress-policy.mjs
+    docker exec "$container" node --input-type=module -e "import {writeFileSync} from 'node:fs'; writeFileSync('/data/options.json', JSON.stringify({ingress_access:'all'}));"
+    docker restart "$container"
+    wait_for_server
+fi
 for module in app budget model validation payments; do request "$module.js" >/dev/null; done
 # The init process can be root; the application process must not be.
 docker exec -i "$container" node --input-type=module < scripts/check-service-user.mjs
