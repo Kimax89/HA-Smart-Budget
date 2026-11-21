@@ -4,7 +4,11 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { BudgetStore } from './store.js';
 import { BudgetError, accountIcons } from './budget.js';
-import { checkIngressAccess, validateIngressAccess } from './ingress-access.js';
+import {
+  checkIngressAccess,
+  checkOverviewRequest,
+  validateIngressAccess,
+} from './ingress-access.js';
 
 const publicDir = fileURLToPath(new URL('../public/', import.meta.url));
 const staticFiles = new Map([
@@ -50,14 +54,22 @@ export function createServer(store, { ingressOnly = false, ingressAccess = 'all'
       res.end(JSON.stringify(value));
     };
     try {
-      checkIngressAccess(req, ingressOnly, ingressAccess);
+      const permissions = checkIngressAccess(req, ingressOnly, ingressAccess);
       const url = new URL(req.url, 'http://localhost');
+      checkOverviewRequest(req, url.pathname, permissions);
       if (req.method === 'GET' && url.pathname === '/api/health')
         return json(200, { status: 'ok' });
       if (req.method === 'GET' && url.pathname === '/api/ledger')
         return json(200, store.ledger(url.searchParams.get('year') ?? ''));
       const match = /^\/api\/months\/(\d{4}-\d{2})(?:\/(close|reopen))?$/.exec(url.pathname);
-      if (match && req.method === 'GET' && !match[2]) return json(200, store.get(match[1]));
+      if (match && req.method === 'GET' && !match[2]) {
+        const row = store.get(match[1]);
+        if (permissions.overviewOnly) {
+          const { state, revision, ...overview } = row;
+          return json(200, { ...overview, permissions });
+        }
+        return json(200, { ...row, permissions });
+      }
       if (match && ['PUT', 'POST'].includes(req.method)) {
         // A custom header + JSON prevents cross-origin form writes; no CORS is enabled.
         if (req.headers['x-budget-request'] !== '1')

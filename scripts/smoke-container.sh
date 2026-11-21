@@ -41,6 +41,9 @@ if [[ "$variant" == Dockerfile ]]; then
     docker exec "$container" node --input-type=module -e "import {writeFileSync,chmodSync} from 'node:fs'; writeFileSync('/data/options.json', JSON.stringify({ingress_access:'admins'})); chmodSync('/data/options.json', 0o600);"
     docker restart "$container"
     docker run --rm -i --network budget-ci --ip 172.30.32.2 --entrypoint node budget-check --input-type=module < scripts/check-ingress-policy.mjs
+    docker exec "$container" node --input-type=module -e "import {writeFileSync} from 'node:fs'; writeFileSync('/data/options.json', JSON.stringify({ingress_access:'admins_edit'}));"
+    docker restart "$container"
+    docker run --rm -i --network budget-ci --ip 172.30.32.2 -e POLICY=admins_edit --entrypoint node budget-check --input-type=module < scripts/check-ingress-policy.mjs
     docker exec "$container" node --input-type=module -e "import {writeFileSync} from 'node:fs'; writeFileSync('/data/options.json', JSON.stringify({ingress_access:'all'}));"
     docker restart "$container"
     wait_for_server

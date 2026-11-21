@@ -12,7 +12,7 @@ import { fixture } from './fixtures.js';
 const settle = async () => {
   for (let i = 0; i < 5; i++) await new Promise((resolve) => setImmediate(resolve));
 };
-function harness(store, now) {
+function harness(store, now, canEdit = true) {
   const nodes = new Map();
   class Element {
     constructor() {
@@ -99,7 +99,14 @@ function harness(store, now) {
           result = store.save(match[1], data.state, data.revision);
         } else if (options.method === 'POST')
           result = store.setClosed(match[1], match[2] === 'close', data.revision);
-        else result = store.get(match[1]);
+        else {
+          result = store.get(match[1]);
+          result.permissions = { canEdit, overviewOnly: !canEdit };
+          if (!canEdit) {
+            delete result.state;
+            delete result.revision;
+          }
+        }
         return { ok: true, json: async () => structuredClone(result) };
       }
       return {
@@ -147,6 +154,30 @@ function harness(store, now) {
     },
   };
 }
+test('overview-only readers can navigate months without editing controls or budget changes', async () => {
+  const store = new BudgetStore(':memory:');
+  try {
+    const before = store.save('2030-01', fixture(), store.get('2030-01').revision);
+    const ui = harness(store, '2030-01-15T12:00:00Z', false);
+    await settle();
+    assert.equal(ui.node('#navigation-menu').hidden, true);
+    assert.equal(ui.node('#month-actions').innerHTML, '');
+    assert.match(ui.node('#status').innerHTML, /Kun visning/);
+    assert.doesNotMatch(ui.node('#content').innerHTML, /data-(edit|add|remove|payment)=/);
+    assert.match(ui.node('#content').innerHTML, /Person A/);
+    await ui.action('tab', 'people');
+    assert.doesNotMatch(ui.node('#content').innerHTML, /Personer og indtægter/);
+    await ui.node('#next').emit('click');
+    await settle();
+    assert.equal(ui.node('#month').value, '2030-02');
+    assert.equal(ui.control.puts, 0);
+    assert.equal(store.get('2030-01').revision, before.revision);
+    assert.equal(store.get('2030-02').saved, false);
+  } finally {
+    store.close();
+  }
+});
+
 test('startup shows next month only when current month is closed, including year rollover', async () => {
   const store = new BudgetStore(':memory:');
   try {

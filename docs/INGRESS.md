@@ -16,6 +16,7 @@ panel_admin er app-metadata. Supervisors schema for ændring af brugerindstillin
 
 - `all`: alle indloggede Home Assistant-brugere. Dette er standard og bevarer den hidtidige adgang.
 - `admins`: kun administratorer. Smart Budget håndhæver begrænsningen for hele HTTP-serveren, inklusive API og statiske filer. Menupunktet kan stadig vises for andre brugere.
+- `admins_edit` (fra 0.2.11): administratorer har alle funktioner. Øvrige identificerede Home Assistant-brugere kan kun se Overblikket og skifte måned. Appens egen menu og alle redigeringshandlinger skjules for dem. Serveren tillader kun månedens beregnede overblik og sundhedsstatus; Regnskab og alle ændringer afvises. Budgettets redigeringstilstand og revisionsnøgle udleveres ikke til læsebrugere. Manglende bruger-id giver afslag; manglende administratorgruppe kan højst give læseadgang i denne tilstand.
 
 Gem og genstart appen. Indstillinger læses fra /data/options.json før tjenesten skifter til en almindelig bruger. Ingen databaseændring eller ekstra Supervisor/Core API-rettigheder er nødvendig. [Officiel vejledning om indstillinger](https://contributors.home-assistant.io/apps/guides/options/).
 

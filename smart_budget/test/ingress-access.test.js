@@ -5,11 +5,44 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
   checkIngressAccess,
+  checkOverviewRequest,
   readIngressAccess,
   validateIngressAccess,
 } from '../src/ingress-access.js';
 
 const request = (headers = {}, ip = '172.30.32.2') => ({ headers, socket: { remoteAddress: ip } });
+
+test('admin editing mode gives identified users overview access and only admins write access', () => {
+  const regular = checkIngressAccess(
+    request({ 'x-remote-user-id': 'reader', 'x-remote-user-groups': 'system-users' }),
+    true,
+    'admins_edit',
+  );
+  assert.deepEqual(regular, { canEdit: false, overviewOnly: true });
+  assert.throws(() => checkIngressAccess(request(), true, 'admins_edit'), { status: 403 });
+  assert.deepEqual(
+    checkIngressAccess(request({ 'x-remote-user-id': 'reader' }), true, 'admins_edit'),
+    regular,
+  );
+  assert.deepEqual(
+    checkIngressAccess(
+      request({ 'x-remote-user-id': 'admin', 'x-remote-user-groups': 'system-admin' }),
+      true,
+      'admins_edit',
+    ),
+    { canEdit: true, overviewOnly: false },
+  );
+  for (const method of ['PUT', 'POST', 'PATCH', 'DELETE'])
+    assert.throws(() => checkOverviewRequest({ method }, '/api/months/2030-01', regular), {
+      status: 403,
+    });
+  assert.throws(() => checkOverviewRequest({ method: 'GET' }, '/api/ledger', regular), {
+    status: 403,
+  });
+  assert.doesNotThrow(() =>
+    checkOverviewRequest({ method: 'GET' }, '/api/months/2030-01', regular),
+  );
+});
 test('all users remain allowed through ingress by default, but identity cannot bypass proxy restriction', () => {
   assert.equal(validateIngressAccess(), 'all');
   assert.doesNotThrow(() => checkIngressAccess(request(), true, 'all'));

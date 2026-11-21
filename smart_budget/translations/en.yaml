@@ -1,4 +1,4 @@
 configuration:
   ingress_access:
     name: Smart Budget access
-    description: 'all = all users, admins = administrators only. Save and restart the app. The sidebar entry may remain visible to everyone, but access is enforced for the entire app and API. Administrator mode requires a Supervisor that forwards user groups; missing groups are denied.'
+    description: 'all = all users can edit. admins = administrators only. admins_edit = administrators can edit, other users can only view the overview and navigate months. Save and restart the app. The Home Assistant sidebar entry may remain visible to everyone. Administrator privileges require user groups from Supervisor.'

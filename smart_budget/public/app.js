@@ -12,6 +12,7 @@ const kr = (value) => currency.format(value / 100);
 const inputMoney = (value) => (value / 100).toFixed(2).replace('.', ',');
 const today = new Date();
 let month = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+let canEdit = false;
 let loaded,
   state,
   dirty = false,
@@ -84,7 +85,7 @@ async function api(route, method = 'GET', data) {
   return result;
 }
 function currentResult() {
-  return loaded.closed ? loaded.result : calculate(state, month);
+  return !canEdit || loaded.closed ? loaded.result : calculate(state, month);
 }
 async function load(target, { useDefaultMonth = false } = {}) {
   if (busy) {
@@ -108,7 +109,17 @@ async function load(target, { useDefaultMonth = false } = {}) {
     }
     month = target;
     loaded = result;
-    state = structuredClone(result.state);
+    canEdit = result.permissions?.canEdit === true;
+    if (!canEdit) tab = 'overview';
+    state = structuredClone(
+      result.state ?? {
+        people: result.result.people,
+        accounts: result.result.accounts,
+        items: result.result.lines,
+        categories: [],
+        payments: [],
+      },
+    );
     dirty = false;
     ledger = undefined;
     $('#month').value = month;
@@ -122,7 +133,7 @@ async function load(target, { useDefaultMonth = false } = {}) {
   }
 }
 async function save() {
-  if (busy || loaded?.closed) return false;
+  if (!canEdit || busy || loaded?.closed) return false;
   if (!dirty) return true;
   busy = true;
   saving = true;
@@ -143,7 +154,7 @@ async function save() {
   }
 }
 async function toggleClosed() {
-  if (busy) return;
+  if (!canEdit || busy) return;
   const action = loaded.closed ? 'reopen' : 'close';
   if (
     action === 'reopen' &&
@@ -173,11 +184,12 @@ async function toggleClosed() {
   }
 }
 function renderStatus() {
-  $('#month-actions').innerHTML = loaded
-    ? `<button id="close-month" class="secondary" ${busy ? 'disabled' : ''}>${loaded.closed ? 'Genåbn måned' : 'Afslut måned'}</button>`
-    : '';
+  $('#month-actions').innerHTML =
+    loaded && canEdit
+      ? `<button id="close-month" class="secondary" ${busy ? 'disabled' : ''}>${loaded.closed ? 'Genåbn måned' : 'Afslut måned'}</button>`
+      : '';
   $('#status').innerHTML = loaded
-    ? `<div class="status-text"><span class="badge ${loaded.closed ? 'closed' : ''}">${loaded.closed ? '● Afsluttet og låst' : '○ Åben måned'}</span><span role="status">${saving ? 'Gemmer…' : busy ? 'Arbejder…' : dirty ? (errorMessage ? 'Kunne ikke gemme' : 'Afventer lagring') : loaded.saved ? 'Gemt' : loaded.sourceMonth ? `Automatisk lagring · udgangspunkt fra ${esc(monthName(loaded.sourceMonth))}` : 'Ændringer gemmes automatisk'}</span></div><div class="actions">${!loaded.closed && dirty && errorMessage ? `<button id="save" class="primary" ${!dirty || busy ? 'disabled' : ''}>Prøv at gemme igen</button>` : ''}</div>`
+    ? `<div class="status-text"><span class="badge ${loaded.closed ? 'closed' : ''}">${loaded.closed ? '● Afsluttet og låst' : '○ Åben måned'}</span><span role="status">${!canEdit ? 'Kun visning' : saving ? 'Gemmer…' : busy ? 'Arbejder…' : dirty ? (errorMessage ? 'Kunne ikke gemme' : 'Afventer lagring') : loaded.saved ? 'Gemt' : loaded.sourceMonth ? `Automatisk lagring · udgangspunkt fra ${esc(monthName(loaded.sourceMonth))}` : 'Ændringer gemmes automatisk'}</span></div><div class="actions">${!loaded.closed && dirty && errorMessage ? `<button id="save" class="primary" ${!dirty || busy ? 'disabled' : ''}>Prøv at gemme igen</button>` : ''}</div>`
     : '<span class="muted">Henter budget…</span>';
   $('#save')?.addEventListener('click', save);
   $('#close-month')?.addEventListener('click', toggleClosed);
@@ -190,7 +202,7 @@ function card(label, value, note, highlight = false) {
 }
 function editName(kind, row) {
   const label = esc(row.name);
-  return loaded.closed
+  return !canEdit || loaded.closed
     ? label
     : '<button type="button" class="edit-name" data-edit="' +
         kind +
@@ -222,10 +234,12 @@ function empty(title, text, action = '') {
   return `<div class="empty"><h2>${title}</h2>${text}${action}</div>`;
 }
 function addButton(kind, label) {
-  return loaded.closed ? '' : `<button class="primary" data-add="${kind}">${label}</button>`;
+  return !canEdit || loaded.closed
+    ? ''
+    : `<button class="primary" data-add="${kind}">${label}</button>`;
 }
 function rowActions(kind, id) {
-  return loaded.closed
+  return !canEdit || loaded.closed
     ? ''
     : `<button class="table-action" data-edit="${kind}" data-id="${id}">Ret</button><button class="table-action danger" data-remove="${kind}" data-id="${id}">Fjern</button>`;
 }
@@ -408,7 +422,7 @@ function paymentBadge(line) {
     : '<span class="muted small">Ingen betaling denne måned</span>';
 }
 function paymentAction(line) {
-  if (loaded.closed || !line.dueDate) return '';
+  if (!canEdit || loaded.closed || !line.dueDate) return '';
   return (
     '<button class="table-action" data-payment="' +
     line.id +
@@ -524,7 +538,7 @@ function categoriesView(r) {
   );
 }
 function togglePayment(itemId) {
-  if (busy || loaded.closed) return;
+  if (!canEdit || busy || loaded.closed) return;
   const line = currentResult().lines.find((i) => i.id === itemId);
   if (!line?.dueDate) return;
   const copy = structuredClone(state);
@@ -560,6 +574,8 @@ function ledgerView() {
   );
 }
 function render() {
+  $('#navigation-menu').hidden = !canEdit;
+  if (!canEdit) tab = 'overview';
   renderStatus();
   if (!loaded) {
     $('#messages').innerHTML = errorMessage
@@ -629,7 +645,7 @@ function render() {
   });
 }
 function removeRow(kind, id) {
-  if (loaded.closed || busy) return;
+  if (!canEdit || loaded.closed || busy) return;
   const copy = structuredClone(state);
   copy[kind] = copy[kind].filter((r) => r.id !== id);
   if (kind === 'items') copy.payments = copy.payments.filter((itemId) => itemId !== id);
@@ -649,7 +665,7 @@ const input = (name, value, attrs = '') => `<input name="${name}" value="${esc(v
 const select = (name, options, selected) =>
   `<select name="${name}">${options.map(([value, label]) => `<option value="${esc(value)}" ${String(selected) === String(value) ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select>`;
 function openEditor(kind, id) {
-  if (loaded.closed || busy) return;
+  if (!canEdit || loaded.closed || busy) return;
   if (kind === 'items' && !state.accounts.length) return toast('Opret en konto først.');
   editing = { kind, id: id ?? crypto.randomUUID() };
   const row = state[kind].find((r) => r.id === id);
@@ -879,7 +895,8 @@ $('#edit-form').addEventListener('submit', (event) => {
     }
     if (index < 0) copy[kind].push(row);
     else copy[kind][index] = row;
-    if (busy || loaded.closed) throw new Error('Vent, til den igangværende handling er færdig.');
+    if (!canEdit || busy || loaded.closed)
+      throw new Error('Vent, til den igangværende handling er færdig.');
     state = validateBudget(copy);
     dirty = true;
     errorMessage = '';
@@ -902,7 +919,7 @@ $('#prev').addEventListener('click', () => stepMonth(-1));
 $('#next').addEventListener('click', () => stepMonth(1));
 document.querySelectorAll('[data-tab]').forEach((button) =>
   button.addEventListener('click', async () => {
-    if (busy || !loaded) return;
+    if (busy || !loaded || !canEdit) return;
     tab = button.dataset.tab;
     $('#navigation-menu').open = false;
     render();

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { setTimeout } from "node:timers/promises";
 
 const base = "http://budget-ci:8099";
+const overviewMode = process.env.POLICY === "admins_edit";
 const administrator = {
   "X-Remote-User-Id": "admin",
   "X-Remote-User-Groups": "system-admin",
@@ -32,7 +33,22 @@ for (const headers of [
     "/api/ledger?year=2030",
     "/api/months/2030-01",
   ]) {
-    assert.equal((await fetch(base + route, { headers })).status, 403, route);
+    const allowed =
+      overviewMode &&
+      headers["X-Remote-User-Id"] &&
+      !route.startsWith("/api/ledger");
+    const response = await fetch(base + route, { headers });
+    assert.equal(response.status, allowed ? 200 : 403, route);
+    if (allowed && route.startsWith("/api/months")) {
+      const month = await response.json();
+      assert.deepEqual(month.permissions, {
+        canEdit: false,
+        overviewOnly: true,
+      });
+      assert.equal(month.state, undefined);
+      assert.equal(month.revision, undefined);
+      assert.equal(month.result.income, before.result.income);
+    }
   }
   for (const [route, method] of [
     ["/api/months/2030-01", "PUT"],

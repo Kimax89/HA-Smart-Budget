@@ -18,7 +18,7 @@ Navigationen til Overblik, Budgetposter, Personer, Konti og Regnskab findes i bu
 
 ## Adgang for Home Assistant-brugere
 
-Under **Indstillinger → Apps → Smart Budget → Konfiguration** kan **Adgang til Smart Budget** sættes til `all` (alle indloggede brugere, standard) eller `admins` (kun administratorer). Gem og genstart appen. Begrænsningen gælder både sider og API; menupunktet kan fortsat være synligt for alle.
+Under **Indstillinger → Apps → Smart Budget → Konfiguration** kan **Adgang til Smart Budget** sættes til `all` (alle indloggede brugere, standard) eller `admins` (kun administratorer). Vælg `admins_edit`, hvis administratorer skal kunne redigere, mens øvrige brugere kun må se Overblikket og skifte måned. Gem og genstart appen. Begrænsningen gælder både sider og API; Home Assistants menupunkt kan fortsat være synligt for alle. I admins_edit skjules appens egen menu og redigeringshandlinger for læsebrugere. De kan ikke åbne Regnskab, markere betalinger eller afslutte/genåbne måneder.
 
 Administratorvalget kræver Supervisor med understøttelse af brugergrupper, verificeret i Supervisor 2026.11.0. Hvis grupper mangler, afvises adgangen. Opdater da Supervisor, eller vælg `all` og genstart. Home Assistants App-konfiguration kan tilgås af administratoren, selv om Smart Budgets Ingress afviser adgang. Standalone Docker påvirkes ikke af indstillingen.
 
@@ -127,7 +127,7 @@ Home Assistant og Docker bruger samme kode. Ved bygning til Home Assistant bruge
 
 ## Første version
 
-Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.10 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
+Programmet starter med et tomt budget. Testene bruger opdigtede personer og beløb. Ekstra funktioner som særskilt backup/gendannelse, eksport og ændringslog er ikke implementeret og afventer godkendelse. Version 0.2.11 skal afprøves på en rigtig Home Assistant-installation; en lokal Node-test erstatter ikke denne kontrol.
 
 ## Drift, backup og support
 
