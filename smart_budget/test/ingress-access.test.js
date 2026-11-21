@@ -91,11 +91,20 @@ test('legacy options default to all, invalid access options fail instead of disa
       ['{}', 'all'],
       ['{"ingress_access":"all"}', 'all'],
       ['{"ingress_access":"admins"}', 'admins'],
+      ['{"ingress_access":"all","admins_edit":true}', 'admins_edit'],
+      ['{"ingress_access":"all","admins_edit":false}', 'all'],
+      ['{"ingress_access":"admins","admins_edit":true}', 'admins'],
     ]) {
       writeFileSync(file, json);
       assert.equal(readIngressAccess(file), expected);
     }
-    for (const json of ['{', 'null', '[]', '{"ingress_access":"typo"}']) {
+    for (const json of [
+      '{',
+      'null',
+      '[]',
+      '{"ingress_access":"typo"}',
+      '{"admins_edit":"false"}',
+    ]) {
       writeFileSync(file, json);
       assert.throws(() => readIngressAccess(file));
     }

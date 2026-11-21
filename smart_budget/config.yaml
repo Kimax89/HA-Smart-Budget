@@ -14,5 +14,7 @@ panel_title: Smart Budget
 panel_admin: false
 options:
   ingress_access: all
+  admins_edit: false
 schema:
-  ingress_access: list(all|admins|admins_edit)
+  ingress_access: list(all|admins)
+  admins_edit: bool

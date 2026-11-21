@@ -2,7 +2,7 @@
 
 ## 0.2.11 — 2026-11-21
 
-- Tilføjet ingress_access: admins_edit. Administratorer kan redigere; øvrige identificerede brugere kan kun se Overblikket og skifte måned.
+- Tilføjet til/fra-kontakten admins_edit i Home Assistants App-konfiguration (standard false). Administratorer kan redigere; øvrige identificerede brugere kan kun se Overblikket og skifte måned.
 - Læsebrugere får ingen redigeringsknapper eller app-menu. API afviser alle ændringer og Regnskab. Budgetternes redigeringstilstand og revisionsnøgler udleveres ikke til læsebrugere.
 - Manglende bruger-id afvises; manglende administratorgruppe giver aldrig redigeringsadgang i admins_edit. Standardvalget all er bevaret.
 - Tilføjet tests af læsevisning, månedsnavigation og rollebeskyttelse samt udvidet containerkontrol.

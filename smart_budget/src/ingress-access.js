@@ -14,7 +14,11 @@ export function readIngressAccess(filename) {
     const options = JSON.parse(readFileSync(filename, 'utf8'));
     if (!options || typeof options !== 'object' || Array.isArray(options))
       throw new Error('Ugyldige Home Assistant-indstillinger.');
-    return validateIngressAccess(options.ingress_access);
+    const access = validateIngressAccess(options.ingress_access);
+    if (options.admins_edit !== undefined && typeof options.admins_edit !== 'boolean')
+      throw new Error('admins_edit skal være true eller false.');
+    if (access === 'admins') return access;
+    return options.admins_edit === true ? 'admins_edit' : access;
   } catch (error) {
     if (error.code === 'ENOENT') return 'all';
     throw error;

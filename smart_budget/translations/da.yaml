@@ -1,4 +1,7 @@
 configuration:
   ingress_access:
     name: Adgang til Smart Budget
-    description: 'all = alle brugere kan redigere. admins = kun administratorer har adgang. admins_edit = administratorer kan redigere, øvrige brugere kan kun se Overblikket og skifte måned. Gem og genstart appen. Menupunktet i Home Assistant kan fortsat ses af alle. Administratorrettigheder kræver brugergrupper fra Supervisor.'
+    description: 'all = adgang for alle indloggede brugere. admins = adgang kun for administratorer; dette valg har forrang for admins_edit. Gem og genstart appen. Menupunktet i Home Assistant kan fortsat ses af alle.'
+  admins_edit:
+    name: Administratorer kan redigere, øvrige brugere kan kun se Overblikket
+    description: 'Til: kun administratorer kan ændre, tilføje, slette, registrere betalinger og afslutte/genåbne måneder. Øvrige brugere kan se Overblikket og skifte måned. Fra: alle med adgang kan redigere. Gælder når Adgang til Smart Budget er all. Gem og genstart appen. Kræver brugergrupper fra Supervisor for administratorrettigheder.'
